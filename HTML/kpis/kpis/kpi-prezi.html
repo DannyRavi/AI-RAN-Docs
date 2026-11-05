@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KPIهای شبکه‌های مخابراتی سلولی — ارائه تعاملی</title>
+<style>
+:root{
+  --ink:#e9eefb;--muted:#93a3c2;--line:rgba(255,255,255,.09);
+  --cyan:#22d3ee;--sky:#38bdf8;--emerald:#34d399;--amber:#fbbf24;
+  --violet:#a78bfa;--rose:#fb7185;--lime:#a3e635;--fuchsia:#e879f9;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#05080f;color:var(--ink);
+  font-family:'Vazirmatn','IRANSansX','IRANSans','Segoe UI',Tahoma,'Noto Naskh Arabic',sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(58% 48% at 72% 8%,rgba(34,211,238,.15),transparent 62%),
+    radial-gradient(52% 46% at 12% 92%,rgba(167,139,250,.14),transparent 62%),
+    radial-gradient(42% 40% at 92% 88%,rgba(52,211,153,.09),transparent 62%),
+    #05080f}
+#grid{position:fixed;inset:-20%;z-index:0;pointer-events:none;opacity:.55;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:74px 74px;
+  -webkit-mask-image:radial-gradient(circle at 50% 42%,#000 18%,transparent 76%);
+  mask-image:radial-gradient(circle at 50% 42%,#000 18%,transparent 76%)}
+#vig{position:fixed;inset:0;z-index:3;pointer-events:none;
+  box-shadow:inset 0 0 200px 60px rgba(0,0,0,.72)}
+#stage{position:fixed;left:0;top:0;width:1px;height:1px;transform-origin:0 0;z-index:2;will-change:transform}
+
+/* ---------- frame ---------- */
+.frame{position:absolute;transform-origin:50% 50%;overflow:hidden;
+  display:flex;flex-direction:column;gap:20px;
+  padding:52px 60px;border-radius:28px;
+  background:linear-gradient(152deg,rgba(21,31,52,.95),rgba(9,14,26,.97));
+  border:1px solid var(--line);
+  box-shadow:0 50px 110px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.055);
+  --accent:#22d3ee;--accent-soft:rgba(34,211,238,.12)}
+.frame::after{content:'';position:absolute;inset:0;border-radius:28px;pointer-events:none;
+  background:radial-gradient(90% 60% at 100% 0%,var(--accent-soft),transparent 62%);
+  opacity:.85}
+.frame::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),transparent 70%);opacity:.9}
+.frame.active{box-shadow:0 50px 130px rgba(0,0,0,.7),0 0 0 1px var(--accent-soft),
+  0 0 70px -10px var(--accent),inset 0 1px 0 rgba(255,255,255,.07)}
+body.ov .frame{outline:1px dashed rgba(255,255,255,.22);outline-offset:12px}
+body.ov .frame.active{outline:1px solid var(--accent)}
+
+/* ---------- typography ---------- */
+.k{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:700;
+  letter-spacing:.2px;color:var(--accent);opacity:.95}
+.k::before{content:'';width:26px;height:2px;border-radius:2px;background:var(--accent);opacity:.8}
+h1{font-size:62px;line-height:1.24;font-weight:800;letter-spacing:-.6px}
+h2{font-size:44px;line-height:1.32;font-weight:800;letter-spacing:-.4px}
+h3{font-size:27px;line-height:1.45;font-weight:700}
+.grad{background:linear-gradient(100deg,#eaf6ff 6%,var(--accent) 48%,#a78bfa 96%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+p{font-size:23px;line-height:1.85;color:#c9d5ec}
+.lede{font-size:27px;line-height:1.75;color:#b9c8e2;font-weight:500}
+.s{font-size:20px;line-height:1.7;color:var(--muted)}
+b,strong{color:#f2f7ff;font-weight:700}
+.mono{direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:.94em}
+.num{unicode-bidi:isolate}
+
+ul.b{list-style:none;display:flex;flex-direction:column;gap:13px}
+ul.b>li{position:relative;padding-inline-start:26px;font-size:22px;line-height:1.72;color:#c9d5ec}
+ul.b>li::before{content:'';position:absolute;inset-inline-start:2px;top:11px;width:9px;height:9px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 14px var(--accent)}
+ul.b>li b{color:#fff}
+
+/* ---------- layout helpers ---------- */
+.grid{display:grid;gap:16px}
+.c2{grid-template-columns:1fr 1fr}
+.c3{grid-template-columns:repeat(3,1fr)}
+.c4{grid-template-columns:repeat(4,1fr)}
+.c5{grid-template-columns:repeat(5,1fr)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;flex:1;min-height:0}
+.split.wide-l{grid-template-columns:1.35fr 1fr}
+.split.wide-r{grid-template-columns:1fr 1.35fr}
+.rowsplit{display:grid;grid-template-rows:auto 1fr;gap:18px;flex:1;min-height:0}
+.grow{flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:16px;min-height:0}
+
+.card{background:rgba(255,255,255,.038);border:1px solid var(--line);border-radius:18px;
+  padding:18px 20px;display:flex;flex-direction:column;gap:7px}
+.card .t{font-size:23px;font-weight:700;color:#eef4ff;line-height:1.4}
+.card .s{font-size:18px}
+.card .nm{font-size:15px;font-weight:800;color:var(--accent);letter-spacing:1px;opacity:.9}
+.card.hl{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border-color:rgba(255,255,255,.16)}
+
+.note{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);
+  border-radius:15px;padding:14px 18px;font-size:20px;line-height:1.7;color:#d7e6f8}
+.note b{color:#fff}
+.note.warn{background:rgba(251,113,133,.1);border-color:rgba(251,113,133,.34)}
+.note.ok{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.32)}
+
+.stat{display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.04);
+  border:1px solid var(--line);border-radius:16px;padding:14px 18px}
+.stat .v{font-size:32px;font-weight:800;color:#fff;line-height:1.25}
+.stat .l{font-size:17px;color:var(--muted)}
+
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border-radius:999px;
+  font-size:18px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:#cfe0f4}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.tagline{display:flex;flex-direction:column;gap:9px}
+.tagline .row{display:flex;gap:12px;align-items:baseline;font-size:20px;color:#c3d1e8}
+.tagline .row .d{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;
+  box-shadow:0 0 12px var(--accent);transform:translateY(-3px)}
+
+/* ---------- table ---------- */
+table.t{width:100%;border-collapse:collapse;font-size:21px}
+table.t th{font-size:17px;font-weight:700;color:#93a6c6;text-align:right;padding:9px 14px;
+  border-bottom:1px solid rgba(255,255,255,.14);letter-spacing:.3px}
+table.t td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.055);color:#dbe4f6;line-height:1.55}
+table.t tbody tr:last-child td{border-bottom:0}
+table.t .n{direction:ltr;text-align:right;font-variant-numeric:tabular-nums;color:#fff;font-weight:700}
+table.t.compact td{padding:7px 12px;font-size:19px}
+table.t.compact th{padding:7px 12px}
+.bar{display:block;height:9px;border-radius:99px;background:var(--c,#34d399);width:var(--w,60%);opacity:.9;
+  box-shadow:0 0 14px -2px var(--c,#34d399)}
+.pill{display:inline-block;padding:3px 12px;border-radius:999px;font-size:17px;font-weight:700}
+.p-good{background:rgba(52,211,153,.16);color:#6ee7b7}
+.p-mid{background:rgba(251,191,36,.16);color:#fcd34d}
+.p-bad{background:rgba(251,113,133,.16);color:#fda4af}
+
+/* ---------- formula ---------- */
+.formula{direction:ltr;display:flex;align-items:center;justify-content:center;gap:10px;
+  flex-wrap:wrap;padding:20px 26px;border-radius:16px;font-size:29px;color:#eaf4ff;
+  background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.26);
+  font-family:Georgia,'Cambria Math','Times New Roman',serif;line-height:1.4}
+.formula .var{font-style:italic}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px}
+.frac .n{padding:2px 10px 5px;border-bottom:1.6px solid rgba(234,244,255,.75);font-size:23px;white-space:nowrap}
+.frac .d{padding:5px 10px 2px;font-size:23px;white-space:nowrap}
+.frac.sm .n,.frac.sm .d{font-size:19px}
+
+/* ---------- figure ---------- */
+figure.fig{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1;margin:0}
+figure.fig img{width:100%;flex:1;min-height:0;object-fit:contain;border-radius:14px;
+  background:#080d18;border:1px solid rgba(255,255,255,.07)}
+figure.fig figcaption{font-size:17px;color:var(--muted);line-height:1.6;text-align:center}
+figure.fig.frameimg img{object-fit:cover}
+
+/* ---------- chapter ---------- */
+.frame.ch{display:grid;grid-template-columns:auto 1fr;gap:44px;align-items:center;
+  background:radial-gradient(120% 130% at 100% 0%,var(--accent-soft),transparent 58%),
+             linear-gradient(152deg,rgba(17,26,45,.96),rgba(7,11,22,.98))}
+.chnum{font-size:190px;line-height:.86;font-weight:800;letter-spacing:-6px;
+  color:transparent;-webkit-text-stroke:2px color-mix(in srgb,var(--accent) 62%,transparent);
+  opacity:.9;direction:ltr}
+.frame.ch h2{font-size:56px;margin-bottom:8px}
+.frame.ch .sub{font-size:24px;color:#b9c8e2;line-height:1.7;max-width:30ch}
+.frame.ch .list{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+
+/* ---------- cover ---------- */
+.frame.hero{justify-content:center;gap:26px;
+  background:radial-gradient(110% 110% at 88% 4%,rgba(34,211,238,.2),transparent 55%),
+             radial-gradient(90% 90% at 0% 100%,rgba(167,139,250,.18),transparent 55%),
+             linear-gradient(152deg,rgba(18,28,48,.96),rgba(6,10,20,.99))}
+.frame.hero h1{font-size:76px}
+.hintline{font-size:18px;color:var(--muted);display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+kbd{display:inline-block;min-width:28px;text-align:center;padding:3px 8px;border-radius:7px;
+  font-family:inherit;font-size:16px;color:#dbe7fa;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16);border-bottom-width:2px}
+
+/* ---------- ui ---------- */
+#ui{position:fixed;inset:auto 0 0 0;z-index:40;display:flex;justify-content:space-between;
+  align-items:center;padding:16px 26px;pointer-events:none}
+#ui .g{display:flex;gap:9px;align-items:center;pointer-events:auto}
+button.b{appearance:none;cursor:pointer;font-family:inherit;font-size:17px;color:#d7e4f7;
+  background:rgba(16,24,42,.86);border:1px solid rgba(255,255,255,.13);border-radius:12px;
+  padding:9px 16px;transition:.2s;backdrop-filter:blur(6px)}
+button.b:hover{background:rgba(34,211,238,.16);border-color:rgba(34,211,238,.5);color:#fff}
+button.b.rnd{width:44px;height:44px;padding:0;font-size:24px;line-height:1;border-radius:50%}
+.counter{font-size:17px;color:var(--muted);background:rgba(16,24,42,.86);
+  border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 16px;font-variant-numeric:tabular-nums}
+.counter b{color:var(--accent)}
+#bar{position:fixed;left:0;bottom:0;height:3px;width:100%;z-index:41;background:rgba(255,255,255,.07)}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),#a78bfa);
+  box-shadow:0 0 16px rgba(34,211,238,.8);transition:width .6s cubic-bezier(.22,.61,.3,1)}
+#helpbox{position:fixed;z-index:60;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(3,6,12,.72);backdrop-filter:blur(4px);padding:30px}
+#helpbox.hide{display:none}
+#helpbox .pane{max-width:640px;width:100%;background:linear-gradient(160deg,#111a2d,#070b16);
+  border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:30px 34px;
+  box-shadow:0 40px 90px rgba(0,0,0,.7);display:flex;flex-direction:column;gap:14px}
+#helpbox h3{font-size:26px}
+#helpbox .row{display:flex;justify-content:space-between;gap:18px;font-size:19px;color:#c5d3ea;
+  border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:9px}
+#helpbox .row span:first-child{color:#93a6c6}
+@media (prefers-reduced-motion:reduce){#stage{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="bg"></div><div id="grid"></div>
+<div id="stage">
+
+<!-- ============ 1 · COVER ============ -->
+<section class="frame hero" data-ch="0" data-w="1900" data-h="1000" data-r="-1.2">
+  <div class="k">دوره هوش مصنوعی در شبکه‌های RAN</div>
+  <h1 class="grad">KPIهای شبکه‌های مخابراتی سلولی</h1>
+  <p class="lede">از پوشش و کیفیت رادیویی تا تجربه کاربر — و پلی به‌سوی هوش مصنوعی در RAN</p>
+  <div class="chips">
+    <span class="chip"><b id="tot2">۶۰</b> فریم</span>
+    <span class="chip">۴۵ دقیقه</span>
+    <span class="chip">LTE و 5G</span>
+    <span class="chip">فارسی</span>
+  </div>
+  <div class="hintline"><kbd>←</kbd><kbd>→</kbd> یا چرخ ماوس برای حرکت · <kbd>O</kbd> نمای کلی · <kbd>H</kbd> راهنما</div>
+</section>
+
+<!-- ============ 2 · ROADMAP ============ -->
+<section class="frame" data-ch="0">
+  <div class="k">نقشه راه</div>
+  <h2>در این ارائه چه مسیری را طی می‌کنیم؟</h2>
+  <div class="grid c3 grow">
+    <div class="card"><div class="nm">۰۱</div><div class="t">مقدمه</div><p class="s">KPI چیست، با Measurement و Counter چه تفاوتی دارد و چگونه دسته‌بندی می‌شود؟</p></div>
+    <div class="card"><div class="nm">۰۲</div><div class="t">شاخص‌های رادیویی</div><p class="s">RSRP، RSRQ، SINR و RSSI؛ تفاوت پوشش با کیفیت.</p></div>
+    <div class="card"><div class="nm">۰۳</div><div class="t">دسترسی و پایداری</div><p class="s">RRC Setup، Random Access، Drop Rate و حفظ ارتباط.</p></div>
+    <div class="card"><div class="nm">۰۴</div><div class="t">تحرک و کیفیت سرویس</div><p class="s">Handover، Throughput، Latency، Packet Loss و BLER.</p></div>
+    <div class="card"><div class="nm">۰۵</div><div class="t">لایه فیزیکی</div><p class="s">ISI، BER، EVM، CQI، MCS، HARQ، Spectral Efficiency و PAPR.</p></div>
+    <div class="card"><div class="nm">۰۶</div><div class="t">هوش مصنوعی و کارگاه</div><p class="s">پیوند KPI با AI-RAN، عیب‌یابی یک سایت و جمع‌بندی.</p></div>
+  </div>
+</section>
+
+<!-- ============ 3 · FOUR QUESTIONS ============ -->
+<section class="frame" data-ch="0">
+  <div class="k">چارچوب داستانی</div>
+  <h2>چهار سؤال، کلید فهم همه KPIها</h2>
+  <p class="s">KPI را به‌عنوان داستان عملکرد شبکه تدریس کنید، نه فقط مجموعه‌ای از فرمول‌ها.</p>
+  <div class="grid c4 grow">
+    <div class="card hl"><div class="nm">۰۱</div><div class="t">آیا پوشش داریم؟</div><p class="s">RSRP · RSRQ · SINR</p><p class="s">پوشش رادیویی</p></div>
+    <div class="card hl"><div class="nm">۰۲</div><div class="t">آیا می‌توانیم متصل شویم؟</div><p class="s">RRC SR · RACH SR</p><p class="s">دسترسی</p></div>
+    <div class="card hl"><div class="nm">۰۳</div><div class="t">آیا سرعت کافی است؟</div><p class="s">Throughput · Latency</p><p class="s">کیفیت سرویس</p></div>
+    <div class="card hl"><div class="nm">۰۴</div><div class="t">آیا ارتباط پایدار می‌ماند؟</div><p class="s">Drop Rate · HO SR</p><p class="s">پایداری و تحرک</p></div>
+  </div>
+  <div class="note">این چهار سؤال به ترتیب، چهار دسته اصلی KPI را می‌سازند: <b>Coverage</b>، <b>Accessibility</b>، <b>Integrity</b> و <b>Retainability / Mobility</b>.</div>
+</section>
+
+<!-- ============ 4 · UE TO CORE ============ -->
+<section class="frame" data-ch="0" data-w="1700">
+  <div class="k">دید معماری</div>
+  <h2>هر لایه، KPIهای خودش را دارد</h2>
+  <div class="split wide-l">
+    <figure class="fig">
+      <img src="./images/Pasted%20image%2020261103112018.png" alt="ساختار شبکه 5G از گوشی تا هسته">
+      <figcaption>مسیر سرویس: از تجهیزات کاربر تا هسته شبکه 5G</figcaption>
+    </figure>
+    <div class="col">
+      <div class="card"><div class="t">UE — تجربه کاربر</div><p class="s">سرعت واقعی، تأخیر، قطعی تماس و کیفیت اپلیکیشن.</p></div>
+      <div class="card"><div class="t">RAN — دسترسی رادیویی</div><p class="s">پوشش، دسترسی، تحرک، تداخل و ظرفیت.</p></div>
+      <div class="card"><div class="t">Core — هسته شبکه</div><p class="s">نشست داده، QoS، دسترس‌پذیری سرویس و اتصال به اینترنت.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 · WHAT IS KPI ============ -->
+<section class="frame" data-ch="0">
+  <div class="k">تعریف</div>
+  <h2>KPI چیست؟</h2>
+  <p>KPI مخفف <b>Key Performance Indicator</b> یا شاخص کلیدی عملکرد است. در شبکه‌های موبایل، KPI معیار عددی است که وضعیت عملکرد شبکه را از دید <b>رادیویی</b>، <b>ارتباطی</b> و <b>تجربه کاربر</b> مشخص می‌کند.</p>
+  <ul class="b grow">
+    <li>چند درصد تماس‌ها با موفقیت برقرار می‌شوند؟</li>
+    <li>چند درصد کاربران می‌توانند به شبکه متصل شوند؟</li>
+    <li>سرعت دانلود کاربران چقدر است؟</li>
+    <li>چه تعداد تماس یا ارتباط قطع می‌شود؟</li>
+    <li>تأخیر شبکه (Latency) چقدر است؟</li>
+  </ul>
+  <div class="note">KPI زبان مشترک تیم بهینه‌سازی رادیویی، عملیات شبکه و تیم داده است؛ اگر تعریف KPI روشن نباشد، گفت‌وگوی فنی هم بی‌نتیجه می‌ماند.</div>
+</section>
+
+<!-- ============ 6 · MEASUREMENT / COUNTER / KPI ============ -->
+<section class="frame" data-ch="0">
+  <div class="k">دقت مفهومی</div>
+  <h2>Measurement، Counter و KPI</h2>
+  <p class="s">این سه مفهوم در کلاس زیاد با هم اشتباه گرفته می‌شوند؛ در حالی که نقش متفاوتی دارند.</p>
+  <div class="grid c3 grow">
+    <div class="card"><div class="t">Measurement</div><p class="s">داده اندازه‌گیری‌شده در یک نقطه و زمان مشخص؛ مثلاً نمونه RSRP یا SINR گزارش‌شده از گوشی.</p></div>
+    <div class="card"><div class="t">Counter</div><p class="s">شمارنده رخدادها؛ مثلاً تعداد تلاش‌های برقراری RRC یا تعداد قطع‌های غیرعادی.</p></div>
+    <div class="card"><div class="t">KPI</div><p class="s">نسبت یا ترکیب محاسبه‌شده از Measurement و Counter؛ مثلاً نرخ موفقیت RRC.</p></div>
+  </div>
+  <div class="formula">
+    <span>KPI =</span>
+    <span class="frac"><span class="n">Counter (success)</span><span class="d">Counter (attempt)</span></span>
+    <span>× 100</span>
+  </div>
+  <div class="note warn">نکته مهم برای تدریس: <b>KPI با Measurement یا Counter یکسان نیست</b>؛ KPI حاصل تعریف و محاسبه است.</div>
+</section>
+
+<!-- ============ 7 · CATEGORIES ============ -->
+<section class="frame" data-ch="0" data-w="1800">
+  <div class="k">دسته‌بندی</div>
+  <h2>پنج دسته اصلی KPIهای شبکه سلولی</h2>
+  <div class="split wide-r">
+    <div class="col">
+      <div class="tagline">
+        <div class="row"><span class="d"></span><span><b>Coverage</b> — پوشش رادیویی: RSRP، RSRQ، SINR</span></div>
+        <div class="row"><span class="d" style="background:var(--emerald)"></span><span><b>Accessibility</b> — امکان برقراری اتصال: RRC SR، E-RAB SR</span></div>
+        <div class="row"><span class="d" style="background:var(--amber)"></span><span><b>Retainability</b> — حفظ اتصال: Drop Rate</span></div>
+        <div class="row"><span class="d" style="background:var(--violet)"></span><span><b>Integrity</b> — کیفیت و کارایی سرویس: Throughput، Latency</span></div>
+        <div class="row"><span class="d" style="background:var(--sky)"></span><span><b>Mobility</b> — جابه‌جایی بین سلول‌ها: Handover Success Rate</span></div>
+      </div>
+      <div class="note">این دسته‌بندی به مفاهیم کیفیت سرویس و تجربه کاربر در LTE و 5G نزدیک است؛ اما جزئیات و نام شاخص‌ها با فناوری و تعریف اپراتور تفاوت دارد.</div>
+    </div>
+    <figure class="fig">
+      <img src="./images/%7B349C335F-BC64-4DAD-9A5A-F3D04EACA105%7D.png" alt="دسته‌بندی KPIهای شبکه سلولی">
+      <figcaption>پنج خانواده KPI در شبکه‌های سلولی</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ 8 · CHAPTER 1 ============ -->
+<section class="frame ch" data-ch="1" data-w="2100">
+  <div class="chnum">۰۱</div>
+  <div>
+    <div class="k">فصل یک</div>
+    <h2>شاخص‌های رادیویی</h2>
+    <p class="sub">پوشش و کیفیت سیگنال — پاسخ به سؤال «آیا پوشش مناسبی داریم؟»</p>
+    <div class="list">
+      <span class="chip">RSRP</span><span class="chip">RSRQ</span>
+      <span class="chip">SINR</span><span class="chip">RSSI</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9 · RSRP ============ -->
+<section class="frame" data-ch="1">
+  <div class="k">Radio KPI</div>
+  <h2>RSRP — قدرت سیگنال مرجع</h2>
+  <p><b>Reference Signal Received Power</b>؛ نشان می‌دهد گوشی، سیگنال مرجع ارسال‌شده از سلول را با چه توانی دریافت می‌کند.</p>
+  <div class="grid c3">
+    <div class="stat"><span class="v">dBm</span><span class="l">واحد اندازه‌گیری</span></div>
+    <div class="stat"><span class="v">منفی</span><span class="l">مقدار عددی معمول</span></div>
+    <div class="stat"><span class="v">نزدیک‌تر به صفر</span><span class="l">سیگنال قوی‌تر</span></div>
+  </div>
+  <div class="note">RSRP فقط از <b>قدرت</b> سیگنال می‌گوید، نه از کیفیت آن. دو گوشی می‌توانند RSRP یکسان داشته باشند اما تجربه‌ای کاملاً متفاوت.</div>
+  <div class="grow"></div>
+  <div class="split">
+    <div class="card"><div class="t">واحد dBm یعنی چه؟</div><p class="s">مقیاس لگاریتمی نسبت به یک میلی‌وات؛ به همین دلیل کاهش ۳ dB یعنی نصف‌شدن توان.</p></div>
+    <div class="card"><div class="t">چرا منفی است؟</div><p class="s">توان دریافتی همیشه کمتر از ۱ میلی‌وات است؛ بنابراین لگاریتم آن منفی می‌شود.</p></div>
+  </div>
+</section>
+
+<!-- ============ 10 · RSRP TABLE ============ -->
+<section class="frame" data-ch="1" data-w="1500">
+  <div class="k">آستانه‌های آموزشی</div>
+  <h2>RSRP در عمل چه اعدادی می‌گیرد؟</h2>
+  <table class="t grow">
+    <thead><tr><th>RSRP</th><th>تفسیر آموزشی</th><th>سطح سیگنال</th></tr></thead>
+    <tbody>
+      <tr><td class="n">-80 dBm</td><td>بسیار خوب</td><td><span class="bar" style="--w:96%;--c:#34d399"></span></td></tr>
+      <tr><td class="n">-90 dBm</td><td>خوب</td><td><span class="bar" style="--w:78%;--c:#a3e635"></span></td></tr>
+      <tr><td class="n">-100 dBm</td><td>متوسط</td><td><span class="bar" style="--w:58%;--c:#fbbf24"></span></td></tr>
+      <tr><td class="n">-110 dBm</td><td>ضعیف</td><td><span class="bar" style="--w:36%;--c:#fb923c"></span></td></tr>
+      <tr><td class="n">-120 dBm</td><td>بسیار ضعیف</td><td><span class="bar" style="--w:18%;--c:#fb7185"></span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">این مقادیر فقط محدوده‌های تقریبی برای آموزش هستند؛ مرزبندی دقیق به شبکه، باند فرکانسی و شرایط اندازه‌گیری وابسته است.</div>
+</section>
+
+<!-- ============ 11 · RSRP MAP ============ -->
+<section class="frame" data-ch="1" data-w="1750">
+  <div class="k">از عدد تا نقشه</div>
+  <h2>RSRP روی نقشه چه شکلی است؟</h2>
+  <div class="split">
+    <figure class="fig">
+      <img src="./images/Pasted%20image%2020261103112025.png" alt="نقشه پوشش رادیویی بر اساس توان دریافتی">
+      <figcaption>نقشه پوشش شهری: توان دریافتی از هر سایت روی نقشه</figcaption>
+    </figure>
+    <div class="col">
+      <ul class="b">
+        <li>رنگ‌ها همان <b>سطح توان دریافتی</b> هستند؛ از سبز و آبی (خوب) تا قرمز و بنفش (ضعیف).</li>
+        <li>هر بلوک، یک <b>سایت با آنتن‌های سکتوری</b> است و نام آن روی نقشه دیده می‌شود.</li>
+        <li>نواحی قرمز پشت ساختمان‌های بلند، نمونه‌ای از <b>سایه‌اندازی</b> است.</li>
+      </ul>
+      <div class="note">نتیجه عملی: به‌جای حدس زدن، ناحیه ضعیف را روی نقشه پیدا می‌کنیم و برای همان ناحیه راهکار طراحی می‌شود.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 12 · RSRQ ============ -->
+<section class="frame" data-ch="1">
+  <div class="k">Radio KPI</div>
+  <h2>RSRQ — کیفیت سیگنال دریافتی</h2>
+  <p><b>Reference Signal Received Quality</b>؛ علاوه بر سیگنال مرجع، شرایط کیفیت سیگنال و اثر تداخل و توان دریافتی کل را هم منعکس می‌کند.</p>
+  <div class="formula">
+    <span class="var">RSRQ</span><span>=</span>
+    <span class="frac"><span class="n">N × RSRP</span><span class="d">RSSI</span></span>
+  </div>
+  <div class="grid c3">
+    <div class="card"><div class="t">N</div><p class="s">تعداد Resource Blockهای مورد اندازه‌گیری</p></div>
+    <div class="card"><div class="t">RSRP</div><p class="s">توان سیگنال مرجع</p></div>
+    <div class="card"><div class="t">RSSI</div><p class="s">توان کل دریافتی: سیگنال + تداخل + نویز</p></div>
+  </div>
+  <div class="note warn">ممکن است RSRP خوب باشد، اما به علت تداخل زیاد، RSRQ نامناسب شود. واحد RSRQ: <b>dB</b>.</div>
+</section>
+
+<!-- ============ 13 · SINR ============ -->
+<section class="frame" data-ch="1">
+  <div class="k">Radio KPI</div>
+  <h2>SINR — نسبت سیگنال به تداخل و نویز</h2>
+  <div class="formula">
+    <span class="var">SINR</span><span>=</span>
+    <span class="frac"><span class="n">P<sub>Signal</sub></span><span class="d">P<sub>Interference</sub> + P<sub>Noise</sub></span></span>
+  </div>
+  <table class="t grow">
+    <thead><tr><th>SINR</th><th>وضعیت تقریبی</th><th></th></tr></thead>
+    <tbody>
+      <tr><td class="n">بالاتر از 20 dB</td><td>عالی</td><td><span class="pill p-good">A</span></td></tr>
+      <tr><td class="n">13 تا 20 dB</td><td>خوب</td><td><span class="pill p-good">B</span></td></tr>
+      <tr><td class="n">5 تا 13 dB</td><td>متوسط</td><td><span class="pill p-mid">C</span></td></tr>
+      <tr><td class="n">0 تا 5 dB</td><td>ضعیف</td><td><span class="pill p-bad">D</span></td></tr>
+      <tr><td class="n">کمتر از 0 dB</td><td>بسیار ضعیف</td><td><span class="pill p-bad">E</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">SINR یکی از مهم‌ترین شاخص‌ها برای بررسی <b>کیفیت واقعی لینک رادیویی</b> است؛ چون تداخل را هم در نظر می‌گیرد.</div>
+</section>
+
+<!-- ============ 14 · A vs B ============ -->
+<section class="frame" data-ch="1" data-w="1450">
+  <div class="k">مثال قابل تدریس</div>
+  <h2>دو کاربر، یک قدرت سیگنال، دو تجربه</h2>
+  <div class="grid c2 grow">
+    <div class="card hl">
+      <div class="nm">کاربر A</div>
+      <div class="t" style="font-size:26px">RSRP = -75 dBm</div>
+      <div class="t" style="font-size:26px">SINR = 20 dB</div>
+      <p class="s">سیگنال قوی و تداخل کم → تجربه اینترنت بسیار خوب.</p>
+      <div class="chips"><span class="chip">پوشش خوب</span><span class="chip">کیفیت خوب</span></div>
+    </div>
+    <div class="card hl" style="border-color:rgba(251,113,133,.4)">
+      <div class="nm" style="color:#fb7185">کاربر B</div>
+      <div class="t" style="font-size:26px">RSRP = -75 dBm</div>
+      <div class="t" style="font-size:26px">SINR = 0 dB</div>
+      <p class="s">سیگنال قوی اما تداخل شدید → تجربه ضعیف، سرعت پایین و قطعی.</p>
+      <div class="chips"><span class="chip">پوشش خوب</span><span class="chip">کیفیت ضعیف</span></div>
+    </div>
+  </div>
+  <div class="note">این مثال تفاوت بنیادین <b>Coverage</b> (پوشش) و <b>Quality</b> (کیفیت) را نشان می‌دهد.</div>
+</section>
+
+<!-- ============ 15 · COMPARISON ============ -->
+<section class="frame" data-ch="1" data-w="1600">
+  <div class="k">جمع‌بندی شاخص‌های رادیویی</div>
+  <h2>RSRP، RSRQ، SINR یا RSSI؟</h2>
+  <table class="t grow">
+    <thead><tr><th>شاخص</th><th>چه چیزی را اندازه می‌گیرد؟</th><th>واحد</th></tr></thead>
+    <tbody>
+      <tr><td><b>RSRP</b></td><td>قدرت سیگنال مرجع</td><td class="n">dBm</td></tr>
+      <tr><td><b>RSRQ</b></td><td>کیفیت سیگنال دریافتی</td><td class="n">dB</td></tr>
+      <tr><td><b>SINR</b></td><td>نسبت سیگنال به تداخل و نویز</td><td class="n">dB</td></tr>
+      <tr><td><b>RSSI</b></td><td>مجموع توان دریافتی</td><td class="n">dBm</td></tr>
+    </tbody>
+  </table>
+  <div class="grid c2">
+    <div class="note">قاعده ساده: <b>RSRP = چقدر قوی؟</b> · <b>SINR = چقدر پاک؟</b></div>
+    <div class="note">در گزارش‌های واقعی، این چهار شاخص همیشه با هم خوانده می‌شوند، نه جداگانه.</div>
+  </div>
+</section>
+
+<!-- ============ 16 · CHAPTER 2 ============ -->
+<section class="frame ch" data-ch="2" data-w="2100">
+  <div class="chnum">۰۲</div>
+  <div>
+    <div class="k">فصل دو</div>
+    <h2>شاخص‌های دسترسی</h2>
+    <p class="sub">Accessibility — آیا کاربر می‌تواند به شبکه متصل شود و سرویس بگیرد؟</p>
+    <div class="list">
+      <span class="chip">RRC Setup SR</span><span class="chip">Random Access SR</span>
+      <span class="chip">Attach SR</span><span class="chip">E-RAB Setup SR</span><span class="chip">PDU Session SR</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 17 · ACCESS STEPS ============ -->
+<section class="frame" data-ch="2">
+  <div class="k">مسیر اتصال</div>
+  <h2>از روشن‌شدن گوشی تا تبادل داده</h2>
+  <p class="s">هر مرحله می‌تواند با یک KPI مشخص ارزیابی شود؛ شکست در هر مرحله، تجربه کاربر را از همان‌جا قطع می‌کند.</p>
+  <div class="grid c4 grow">
+    <div class="card"><div class="nm">مرحله ۱</div><div class="t">جست‌وجوی شبکه</div><p class="s">گوشی سلول را پیدا می‌کند و اطلاعات سیستمی را می‌خواند.</p><p class="s"><b>KPI:</b> Cell Selection</p></div>
+    <div class="card"><div class="nm">مرحله ۲</div><div class="t">دسترسی اولیه رادیویی</div><p class="s">Random Access برای گرفتن زمان‌بندی uplink.</p><p class="s"><b>KPI:</b> RACH SR</p></div>
+    <div class="card"><div class="nm">مرحله ۳</div><div class="t">برقراری RRC</div><p class="s">کانال کنترلی بین گوشی و شبکه ساخته می‌شود.</p><p class="s"><b>KPI:</b> RRC Setup SR</p></div>
+    <div class="card"><div class="nm">مرحله ۴</div><div class="t">ایجاد Bearer / نشست</div><p class="s">منابع و مسیر داده برای سرویس فراهم می‌شود.</p><p class="s"><b>KPI:</b> E-RAB SR · PDU Session SR</p></div>
+  </div>
+  <div class="note">اگر RRC برقرار نشود، هیچ سرویسی وجود ندارد؛ به همین دلیل RRC Setup Success Rate پایه‌ای‌ترین KPI دسترسی است.</div>
+</section>
+
+<!-- ============ 18 · RRC SR ============ -->
+<section class="frame" data-ch="2">
+  <div class="k">فرمول</div>
+  <h2>RRC Connection Setup Success Rate</h2>
+  <div class="formula" style="font-size:24px">
+    <span>RRC SR =</span>
+    <span class="frac"><span class="n">Successful RRC Setups</span><span class="d">RRC Setup Attempts</span></span>
+    <span>× 100</span>
+  </div>
+  <div class="grid c2 grow">
+    <div class="card"><div class="t">مثال عددی</div><p class="s">از ۱۰۰۰ تلاش اتصال، ۹۵۰ مورد موفق بوده است.</p>
+      <div class="formula" style="font-size:22px;padding:12px">RRC SR = 950 / 1000 × 100 = 95%</div></div>
+    <div class="card"><div class="t">تفسیر</div><p class="s">یعنی ۹۵ درصد تلاش‌های اتصال موفق بوده‌اند؛ ۵ درصد کاربران حتی به مرحله «استفاده از سرویس» نرسیده‌اند.</p></div>
+  </div>
+  <div class="note">در محاسبه واقعی، تعریف «تلاش» و «موفقیت» باید دقیقاً مطابق استاندارد KPI اپراتور باشد؛ در غیر این صورت عدد قابل مقایسه نیست.</div>
+</section>
+
+<!-- ============ 19 · ACCESS TABLE ============ -->
+<section class="frame" data-ch="2" data-w="1600">
+  <div class="k">خانواده دسترسی</div>
+  <h2>مهم‌ترین KPIهای این گروه</h2>
+  <table class="t grow">
+    <thead><tr><th>KPI</th><th>مفهوم</th><th>فناوری</th></tr></thead>
+    <tbody>
+      <tr><td><b>RRC Setup Success Rate</b></td><td>موفقیت برقراری ارتباط RRC</td><td>LTE / NR</td></tr>
+      <tr><td><b>Random Access Success Rate</b></td><td>موفقیت دسترسی اولیه رادیویی</td><td>LTE / NR</td></tr>
+      <tr><td><b>Attach Success Rate</b></td><td>موفقیت ثبت در شبکه LTE</td><td>LTE</td></tr>
+      <tr><td><b>E-RAB Setup Success Rate</b></td><td>موفقیت ایجاد Bearer برای سرویس</td><td>LTE</td></tr>
+      <tr><td><b>PDU Session Establishment SR</b></td><td>موفقیت ایجاد نشست داده</td><td>5G</td></tr>
+    </tbody>
+  </table>
+  <div class="note ok">نکته تدریس: همین مفهوم در نسل‌های مختلف با نام‌های متفاوت دیده می‌شود؛ ساختار «تلاش ← موفقیت» ثابت است.</div>
+</section>
+
+<!-- ============ 20 · CHAPTER 3 ============ -->
+<section class="frame ch" data-ch="3" data-w="2100">
+  <div class="chnum">۰۳</div>
+  <div>
+    <div class="k">فصل سه</div>
+    <h2>شاخص‌های پایداری ارتباط</h2>
+    <p class="sub">Retainability — آیا شبکه می‌تواند ارتباط برقرارشده را حفظ کند؟</p>
+    <div class="list">
+      <span class="chip">Drop Rate</span><span class="chip">Session Retainability</span>
+      <span class="chip">Abnormal Release</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 21 · DROP RATE ============ -->
+<section class="frame" data-ch="3">
+  <div class="k">فرمول</div>
+  <h2>Drop Rate — نرخ قطع غیرعادی ارتباط</h2>
+  <div class="formula">
+    <span>Drop Rate =</span>
+    <span class="frac"><span class="n">Abnormal Releases</span><span class="d">Established Sessions</span></span>
+    <span>× 100</span>
+  </div>
+  <div class="grid c2 grow">
+    <div class="card"><div class="t">مثال عددی</div><p class="s">ارتباط‌های برقرارشده: <b>۱۰٬۰۰۰</b></p><p class="s">قطع‌های غیرعادی: <b>۱۰۰</b></p><div class="formula" style="font-size:22px;padding:12px">Drop Rate = 100 / 10000 × 100 = 1%</div></div>
+    <div class="card"><div class="t">چرا مهم است؟</div><p class="s">هر قطع غیرعادی یعنی سرویس کاربر ناگهان از بین رفته است؛ این شاخص مستقیم‌ترین سنجه نارضایتی کاربر است.</p></div>
+  </div>
+  <div class="note">در محاسبه واقعی، تعریف Session، Release و بازه زمانی باید دقیقاً مطابق استاندارد KPI اپراتور باشد.</div>
+</section>
+
+<!-- ============ 22 · DROP CAUSES ============ -->
+<section class="frame" data-ch="3">
+  <div class="k">از شاخص به علت</div>
+  <h2>چه چیزی Drop Rate را بالا می‌برد؟</h2>
+  <p class="s">KPI علت را نمی‌گوید؛ فقط خبر می‌دهد که مشکلی هست. کار مهندس، رفتن از شاخص به علت است.</p>
+  <div class="grid c5 grow">
+    <div class="card"><div class="nm">۰۱</div><div class="t">پوشش ضعیف</div><p class="s">سیگنال در لبه سلول کافی نیست.</p></div>
+    <div class="card"><div class="nm">۰۲</div><div class="t">تداخل رادیویی</div><p class="s">SINR پایین، رمزگشایی را غیرممکن می‌کند.</p></div>
+    <div class="card"><div class="nm">۰۳</div><div class="t">شکست Handover</div><p class="s">کاربر در حال حرکت، سلول را از دست می‌دهد.</p></div>
+    <div class="card"><div class="nm">۰۴</div><div class="t">ازدحام شبکه</div><p class="s">کمبود PRB و شکست زمان‌بندی.</p></div>
+    <div class="card"><div class="nm">۰۵</div><div class="t">خطای تجهیزات</div><p class="s">مشکل سخت‌افزاری یا نرم‌افزاری سایت.</p></div>
+  </div>
+  <div class="note warn">هیچ‌کدام از این علت‌ها را نمی‌توان فقط با Drop Rate تشخیص داد؛ باید با SINR، PRB Utilization و HO Failure ترکیب شود.</div>
+</section>
+
+<!-- ============ 23 · CHAPTER 4 ============ -->
+<section class="frame ch" data-ch="4" data-w="2100">
+  <div class="chnum">۰۴</div>
+  <div>
+    <div class="k">فصل چهار</div>
+    <h2>شاخص‌های تحرک</h2>
+    <p class="sub">Mobility — آیا کاربر در حال حرکت هم سرویس پایدار دارد؟</p>
+    <div class="list">
+      <span class="chip">Handover SR</span><span class="chip">Intra / Inter-frequency</span>
+      <span class="chip">Inter-RAT</span><span class="chip">HO Interruption Time</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 24 · HANDOVER ============ -->
+<section class="frame" data-ch="4">
+  <div class="k">Mobility KPI</div>
+  <h2>Handover — جابه‌جایی بین سلول‌ها</h2>
+  <p>وقتی با خودرو در خیابان حرکت می‌کنید، گوشی شما از یک سلول به سلول دیگر منتقل می‌شود؛ این فرایند <b>Handover</b> نام دارد.</p>
+  <div class="formula">
+    <span>HO SR =</span>
+    <span class="frac"><span class="n">Successful Handovers</span><span class="d">Handover Attempts</span></span>
+    <span>× 100</span>
+  </div>
+  <div class="grid c3">
+    <div class="stat"><span class="v">500</span><span class="l">تلاش برای Handover</span></div>
+    <div class="stat"><span class="v">475</span><span class="l">Handover موفق</span></div>
+    <div class="stat"><span class="v">95%</span><span class="l">HO Success Rate</span></div>
+  </div>
+  <div class="note">اگر نرخ Handover پایین باشد، کاربر هنگام حرکت با قطع تماس، افت سرعت یا اختلال سرویس مواجه می‌شود.</div>
+</section>
+
+<!-- ============ 25 · HO TYPES ============ -->
+<section class="frame" data-ch="4">
+  <div class="k">انواع تحرک</div>
+  <h2>هر نوع Handover، شاخص خودش را دارد</h2>
+  <div class="grid c2 grow">
+    <div class="card"><div class="t">Intra-frequency HO</div><p class="s">جابه‌جایی بین دو سلول با فرکانس یکسان؛ رایج‌ترین حالت در شبکه شهری.</p></div>
+    <div class="card"><div class="t">Inter-frequency HO</div><p class="s">جابه‌جایی بین باندهای فرکانسی مختلف؛ برای مدیریت ظرفیت و بار استفاده می‌شود.</p></div>
+    <div class="card"><div class="t">Inter-RAT HO</div><p class="s">جابه‌جایی بین فناوری‌ها، مثلاً از 5G به LTE هنگام خروج از پوشش.</p></div>
+    <div class="card"><div class="t">Handover Interruption Time</div><p class="s">مدت قطعی موقت داده در لحظه جابه‌جایی؛ مستقیماً روی تجربه کاربر اثر دارد.</p></div>
+  </div>
+  <div class="note">نکته: در 5G با Beamforming، مدیریت Beam و Mobility پیچیده‌تر می‌شود و به شاخص‌های تکمیلی نیاز دارد.</div>
+</section>
+
+<!-- ============ 26 · CHAPTER 5 ============ -->
+<section class="frame ch" data-ch="5" data-w="2100">
+  <div class="chnum">۰۵</div>
+  <div>
+    <div class="k">فصل پنج</div>
+    <h2>کیفیت سرویس</h2>
+    <p class="sub">Integrity — ممکن است متصل باشیم و سیگنال خوب باشد، اما اینترنت کند باشد.</p>
+    <div class="list">
+      <span class="chip">Throughput</span><span class="chip">Latency</span>
+      <span class="chip">Packet Loss</span><span class="chip">BLER</span><span class="chip">Jitter</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 27 · THROUGHPUT ============ -->
+<section class="frame" data-ch="5">
+  <div class="k">Integrity KPI</div>
+  <h2>Throughput — نرخ انتقال داده</h2>
+  <p>نشان می‌دهد در واحد زمان، چه مقدار اطلاعات واقعاً منتقل می‌شود.</p>
+  <div class="formula">
+    <span>Throughput =</span>
+    <span class="frac"><span class="n">Transferred Data</span><span class="d">Time</span></span>
+  </div>
+  <div class="grid c2 grew" style="flex:1;min-height:0">
+    <div class="card"><div class="t">DL Throughput</div><p class="s">سرعت دانلود — سنجه اصلی تجربه کاربر در اکثر اپلیکیشن‌ها.</p></div>
+    <div class="card"><div class="t">UL Throughput</div><p class="s">سرعت آپلود — مهم برای ویدیو، تماس تصویری و اینترنت اشیا.</p></div>
+  </div>
+  <div class="chips"><span class="chip">Mbps</span><span class="chip">Kbps</span><span class="chip">Gbps</span></div>
+  <div class="note">Throughput کاربر (User Throughput) با مجموع Throughput سلول (Cell Throughput) یکی نیست؛ یکی تجربه است و دیگری ظرفیت.</div>
+</section>
+
+<!-- ============ 28 · LATENCY ============ -->
+<section class="frame" data-ch="5" data-w="1550">
+  <div class="k">Integrity KPI</div>
+  <h2>Latency — تأخیر</h2>
+  <p>مدت زمانی که طول می‌کشد داده از مبدأ به مقصد برسد. واحد: <b>میلی‌ثانیه (ms)</b>.</p>
+  <table class="t grow">
+    <thead><tr><th>Latency</th><th>تفسیر آموزشی</th><th></th></tr></thead>
+    <tbody>
+      <tr><td class="n">کمتر از 10 ms</td><td>بسیار کم</td><td><span class="pill p-good">عالی</span></td></tr>
+      <tr><td class="n">10 – 30 ms</td><td>کم</td><td><span class="pill p-good">خوب</span></td></tr>
+      <tr><td class="n">30 – 50 ms</td><td>متوسط</td><td><span class="pill p-mid">قابل قبول</span></td></tr>
+      <tr><td class="n">بالاتر از 100 ms</td><td>زیاد</td><td><span class="pill p-bad">نامطلوب</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">این حدود برای درک اولیه هستند؛ تأخیر قابل قبول به نوع سرویس و محل اندازه‌گیری (رادیو، شبکه انتقال یا انتها به انتها) وابسته است.</div>
+</section>
+
+<!-- ============ 29 · PACKET LOSS + BLER ============ -->
+<section class="frame" data-ch="5">
+  <div class="k">دو شاخص خطا</div>
+  <h2>Packet Loss و BLER</h2>
+  <div class="grid c2 grow">
+    <div class="card">
+      <div class="t">Packet Loss</div>
+      <p class="s">درصد بسته‌هایی که به مقصد نمی‌رسند.</p>
+      <div class="formula" style="font-size:20px;padding:12px"><span>PL =</span><span class="frac sm"><span class="n">Lost Packets</span><span class="d">Sent Packets</span></span><span>× 100</span></div>
+      <p class="s">مثال: از ۱۰۰۰ بسته، ۱۰ بسته از دست می‌رود → <b>۱٪</b></p>
+    </div>
+    <div class="card">
+      <div class="t">BLER — Block Error Rate</div>
+      <p class="s">نسبت بلوک‌های دریافتی دارای خطا به کل بلوک‌ها.</p>
+      <div class="formula" style="font-size:20px;padding:12px"><span>BLER =</span><span class="frac sm"><span class="n">Erroneous Blocks</span><span class="d">Total Blocks</span></span><span>× 100</span></div>
+      <p class="s">مثال: ۱۰۰ بلوک خطادار از ۱۰۰۰ بلوک → <b>۱۰٪</b></p>
+    </div>
+  </div>
+  <div class="note">BLER برای بررسی عملکرد <b>لینک رادیویی</b> و کیفیت رمزگذاری و مدولاسیون اهمیت دارد؛ Packet Loss بیشتر در سطح شبکه و سرویس دیده می‌شود.</div>
+</section>
+
+<!-- ============ 30 · THROUGHPUT CHART ============ -->
+<section class="frame" data-ch="5" data-w="1750">
+  <div class="k">نمودار آموزشی</div>
+  <h2>چرا سرعت این کاربر تغییر می‌کند؟</h2>
+  <div class="split wide-l">
+    <figure class="fig">
+      <img src="./images/%7B5C8A30FC-1569-428E-9657-C56E422756B9%7D.png" alt="تغییر Throughput در طول زمان">
+      <figcaption>Throughput دانلود یک کاربر در حال حرکت</figcaption>
+    </figure>
+    <div class="col">
+      <div class="note">از مخاطب بپرسید: <b>چرا سرعت از ۹۵ به ۲۵ مگابیت رسیده و دوباره افزایش پیدا کرده است؟</b></div>
+      <ul class="b">
+        <li>تغییر سلول سرویس‌دهنده</li>
+        <li>افت SINR</li>
+        <li>افزایش تعداد کاربران</li>
+        <li>تغییر تخصیص منابع رادیویی</li>
+        <li>تغییر شرایط کانال</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 31 · RADIO QUALITY CHART ============ -->
+<section class="frame" data-ch="5" data-w="1750">
+  <div class="k">نمودار آموزشی</div>
+  <h2>مقایسه کیفیت رادیویی سه کاربر</h2>
+  <div class="split wide-l">
+    <figure class="fig">
+      <img src="./images/%7BB0DC7554-DFA3-42F1-ABC1-887978EA34D8%7D.png" alt="مقایسه RSRP و SINR سه کاربر">
+      <figcaption>داده‌های فرضی آموزشی: RSRP بر حسب dBm و SINR بر حسب dB</figcaption>
+    </figure>
+    <div class="col">
+      <div class="card"><div class="t">کاربر A</div><p class="s">سیگنال و کیفیت مناسب.</p></div>
+      <div class="card"><div class="t">کاربر B</div><p class="s">قدرت سیگنال مناسب، ولی کیفیت پایین به علت تداخل احتمالی.</p></div>
+      <div class="card"><div class="t">کاربر C</div><p class="s">قدرت سیگنال ضعیف‌تر، ولی کیفیت نسبی قابل قبول.</p></div>
+    </div>
+  </div>
+  <div class="note">RSRP و SINR دو واحد متفاوت دارند؛ این نمودار برای مقایسه آموزشی است، نه مقایسه مستقیم اندازه عددی آن‌ها.</div>
+</section>
+
+<!-- ============ 32 · KPI DASHBOARD CHART ============ -->
+<section class="frame" data-ch="5" data-w="1750">
+  <div class="k">نمودار آموزشی</div>
+  <h2>داشبورد نمونه عملکرد یک سایت LTE</h2>
+  <div class="split wide-l">
+    <figure class="fig">
+      <img src="./images/%7BE3C1F602-CEEC-42B4-A43E-EF7572E8DB5A%7D.png" alt="مقایسه KPIهای عملکرد شبکه">
+      <figcaption>یک نمونه داشبورد فرضی از وضعیت عملکرد سایت</figcaption>
+    </figure>
+    <div class="col">
+      <table class="t compact">
+        <thead><tr><th>KPI</th><th>عملکرد</th></tr></thead>
+        <tbody>
+          <tr><td>RRC SR</td><td class="n">98%</td></tr>
+          <tr><td>E-RAB SR</td><td class="n">97%</td></tr>
+          <tr><td>HO SR</td><td class="n">95%</td></tr>
+          <tr><td>Cell Availability</td><td class="n">99.5%</td></tr>
+          <tr><td>Session Retainability</td><td class="n">98.8%</td></tr>
+        </tbody>
+      </table>
+      <div class="note">همه مقادیر بالا هستند؛ اما برای تشخیص وضعیت واقعی باید تعریف KPI، آستانه هدف و بازه اندازه‌گیری را هم بدانیم.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 33 · AVAILABILITY / UTILIZATION ============ -->
+<section class="frame" data-ch="5">
+  <div class="k">دو شاخص مدیریت شبکه</div>
+  <h2>Availability و Utilization</h2>
+  <div class="grid c2 grow">
+    <div class="card">
+      <div class="t">Availability — دسترس‌پذیری</div>
+      <p class="s">چه درصدی از زمان، سلول قابل استفاده بوده است.</p>
+      <div class="formula" style="font-size:20px;padding:12px"><span>Availability =</span><span class="frac sm"><span class="n">Available Time</span><span class="d">Total Time</span></span><span>× 100</span></div>
+      <p class="s">اگر سایتی در یک روز ۲۳ ساعت و ۵۵ دقیقه فعال باشد → حدود <b>۹۹٫۶۵٪</b></p>
+    </div>
+    <div class="card">
+      <div class="t">Utilization — استفاده از منابع</div>
+      <p class="s">چه میزان از منابع شبکه مصرف شده است.</p>
+      <ul class="b" style="margin-top:4px">
+        <li>PRB Utilization در LTE و 5G</li>
+        <li>CPU Utilization</li>
+        <li>Resource Utilization</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note">PRB Utilization بالا می‌تواند نشانه ازدحام باشد؛ اما به‌تنهایی اثبات‌کننده <b>Congestion</b> نیست.</div>
+</section>
+
+<!-- ============ 34 · REAL DASHBOARD ============ -->
+<section class="frame" data-ch="5" data-w="1850">
+  <div class="k">نمونه واقعی</div>
+  <h2>همه این شاخص‌ها کنار هم</h2>
+  <figure class="fig">
+    <img src="./images/Pasted%20image%2020261103112043.png" alt="داشبورد واقعی اندازه‌گیری KPI شبکه">
+    <figcaption>RSRP، RSSI، SNR، PRB، MCS، BLER و Throughput در یک داشبورد اندازه‌گیری واقعی</figcaption>
+  </figure>
+  <div class="note">دقت کنید همان شاخص‌هایی که جداگانه تعریف کردیم، اینجا به‌صورت <b>سری زمانی</b> و در کنار هم خوانده می‌شوند.</div>
+</section>
+
+<!-- ============ 35 · TWO DASHBOARDS ============ -->
+<section class="frame" data-ch="5" data-w="1850">
+  <div class="k">از KPI به محصول</div>
+  <h2>داشبوردهای تجاری و متن‌باز</h2>
+  <div class="split">
+    <figure class="fig">
+      <img src="./images/Pasted%20image%2020261103112059.png" alt="داشبورد پایش عملکرد 5G">
+      <figcaption>نمای QoE، مصرف، پوشش و دستگاه‌ها در 5G</figcaption>
+    </figure>
+    <figure class="fig">
+      <img src="./images/Pasted%20image%2020261103112118.png" alt="داشبورد RAN و KPM">
+      <figcaption>داشبورد RAN: gNB، کاربران و Throughput</figcaption>
+    </figure>
+  </div>
+  <div class="note">تفاوت اصلی داشبوردها در <b>تعریف شاخص</b> و <b>آستانه هدف</b> است، نه در زیبایی نمودارها.</div>
+</section>
+
+<!-- ============ 36 · THRESHOLDS ============ -->
+<section class="frame" data-ch="5" data-w="1750">
+  <div class="k">تصمیم‌گیری</div>
+  <h2>عدد بدون آستانه، تصمیم نمی‌سازد</h2>
+  <div class="split wide-l">
+    <figure class="fig">
+      <img src="./images/Pasted%20image%2020261103112138.png" alt="آستانه‌های KPI و روش‌های تجسم داده">
+      <figcaption>نمونه آستانه‌گذاری: خوب، هشدار و بحرانی برای هر KPI</figcaption>
+    </figure>
+    <div class="col">
+      <div class="card"><div class="t">Good</div><p class="s">وضعیت هدف؛ نیازی به اقدام نیست.</p></div>
+      <div class="card"><div class="t">Warning</div><p class="s">روند نزولی؛ نیاز به بررسی و پایش نزدیک.</p></div>
+      <div class="card"><div class="t">Critical</div><p class="s">خارج از محدوده سرویس؛ اقدام فوری.</p></div>
+      <div class="note">برای هر KPI سه چیز لازم است: تعریف دقیق، آستانه هدف و بازه اندازه‌گیری.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 37 · CHAPTER 6 ============ -->
+<section class="frame ch" data-ch="6" data-w="2100">
+  <div class="chnum">۰۶</div>
+  <div>
+    <div class="k">فصل شش</div>
+    <h2>شاخص‌های لایه فیزیکی</h2>
+    <p class="sub">PHY Metrics — یک لایه پایین‌تر: کیفیت انتقال و دریافت سیگنال</p>
+    <div class="list">
+      <span class="chip">ISI</span><span class="chip">BER</span><span class="chip">BLER</span>
+      <span class="chip">EVM</span><span class="chip">CQI</span><span class="chip">MCS</span>
+      <span class="chip">HARQ</span><span class="chip">SE</span><span class="chip">PAPR</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 38 · THREE FAMILIES ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">دسته‌بندی تکمیلی</div>
+  <h2>سه خانواده شاخص، سه سطح نگاه</h2>
+  <div class="grid c3 grow">
+    <div class="card hl"><div class="nm">سطح ۱</div><div class="t">Network KPI</div><p class="s">عملکرد کلی شبکه: Accessibility، Retainability، Mobility، Availability.</p></div>
+    <div class="card hl"><div class="nm">سطح ۲</div><div class="t">Radio KPI</div><p class="s">کیفیت پوشش و ارتباط رادیویی: RSRP، RSRQ، SINR، RSSI.</p></div>
+    <div class="card hl"><div class="nm">سطح ۳</div><div class="t">PHY Metrics</div><p class="s">کیفیت انتقال و دریافت سیگنال: BER، EVM، ISI، BLER، PAPR.</p></div>
+  </div>
+  <div class="note">BER، EVM و ISI بیشتر در گروه سوم قرار می‌گیرند؛ هرچند در تحلیل عملکرد شبکه هم کاربرد دارند.</div>
+</section>
+
+<!-- ============ 39 · ISI ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">PHY Metric</div>
+  <h2>ISI — تداخل بین سمبل‌ها</h2>
+  <div class="split">
+    <div class="col">
+      <p>فرستنده اطلاعات را به شکل <b>سمبل</b> ارسال می‌کند. در کانال ایده‌آل هر سمبل در زمان خودش می‌رسد؛ اما در کانال واقعی، نسخه‌های تأخیردار نیز می‌رسند و سمبل‌های قبلی روی سمبل‌های بعدی اثر می‌گذارند.</p>
+      <div class="card"><div class="t">مثال ساده</div><p class="s">ارسال <span class="mono">1 → 0 → 1</span>؛ بازتاب ساختمان باعث می‌شود نسخه‌ای از سمبل اول، روی سمبل دوم بیفتد و گیرنده اشتباه تصمیم بگیرد.</p></div>
+      <div class="note">راهکارها: Equalization · OFDM · Cyclic Prefix · Channel Estimation</div>
+    </div>
+    <div class="col">
+      <div class="card"><div class="t">چرا ISI اتفاق می‌افتد؟</div>
+        <ul class="b" style="gap:8px;margin-top:6px">
+          <li><b>Multipath</b> — رسیدن چند نسخه از سیگنال</li>
+          <li>تأخیر متفاوت مسیرهای انتشار</li>
+          <li>پهنای باند محدود کانال</li>
+          <li>پاسخ ضربه‌ای طولانی کانال</li>
+        </ul>
+      </div>
+      <div class="note ok">در LTE و 5G از OFDM با <b>Cyclic Prefix</b> استفاده می‌شود تا اثر تأخیرهای چندمسیری کنترل شود؛ اما ISI کاملاً حذف نمی‌شود.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 40 · BER ============ -->
+<section class="frame" data-ch="6" data-w="1750">
+  <div class="k">PHY Metric</div>
+  <h2>BER — نرخ خطای بیت</h2>
+  <div class="split wide-l">
+    <div class="col">
+      <p>نشان می‌دهد چند درصد از بیت‌های دریافت‌شده با بیت‌های ارسال‌شده تفاوت دارند.</p>
+      <div class="formula" style="font-size:24px">
+        <span>BER =</span>
+        <span class="frac"><span class="n">Error Bits</span><span class="d">Total Received Bits</span></span>
+      </div>
+      <div class="card"><div class="t">مثال</div><p class="s">یک میلیون بیت ارسال، ۱۰۰۰ بیت خطا → <b>BER = 0.001</b> یعنی ۰٫۱٪</p></div>
+      <div class="note">با افزایش SNR، احتمال خطای بیت کاهش می‌یابد.</div>
+    </div>
+    <figure class="fig">
+      <img src="./images/%7BDA551BBF-69BD-44C2-A9A8-38EB742F1A5D%7D.png" alt="نمودار BER بر حسب SNR">
+      <figcaption>کاهش BER با افزایش SNR</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ 41 · BLER ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">PHY / Link Metric</div>
+  <h2>BLER — نرخ خطای بلوک</h2>
+  <div class="split">
+    <div class="col">
+      <p>در LTE و 5G داده‌ها به‌صورت بیت‌های مستقل پردازش نمی‌شوند؛ اطلاعات در قالب <b>Transport Block</b> ارسال می‌شوند.</p>
+      <div class="formula" style="font-size:23px">
+        <span>BLER =</span>
+        <span class="frac"><span class="n">Erroneous Blocks</span><span class="d">Total Received Blocks</span></span>
+        <span>× 100</span>
+      </div>
+      <div class="card"><div class="t">مثال</div><p class="s">۱۰۰۰ بلوک دریافتی، ۱۰۰ بلوک خطادار → <b>BLER = 10%</b></p></div>
+    </div>
+    <div class="col">
+      <table class="t compact">
+        <thead><tr><th>ویژگی</th><th>BER</th><th>BLER</th></tr></thead>
+        <tbody>
+          <tr><td>واحد ارزیابی</td><td>بیت</td><td>بلوک</td></tr>
+          <tr><td>مفهوم</td><td>خطای بیت</td><td>خطای بلوک</td></tr>
+          <tr><td>کاربرد</td><td>ارزیابی PHY</td><td>ارزیابی لینک</td></tr>
+          <tr><td>ارتباط با HARQ</td><td>غیرمستقیم</td><td>مستقیم‌تر</td></tr>
+        </tbody>
+      </table>
+      <div class="note">BER و BLER الزاماً نسبت عددی ثابتی با هم ندارند؛ اندازه بلوک، کدینگ، CRC و توزیع خطاها در رابطه آن‌ها مؤثر است.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 42 · EVM ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">PHY Metric</div>
+  <h2>EVM — میزان خطای بردار سیگنال</h2>
+  <div class="split wide-l">
+    <div class="col">
+      <p>در مدولاسیون‌هایی مثل QPSK و 16QAM و 64QAM، اطلاعات به شکل نقاطی روی صفحه مختلط <b>I/Q</b> نمایش داده می‌شوند. هرچه نقطه دریافتی از موقعیت ایده‌آل دورتر باشد، EVM بزرگ‌تر است.</p>
+      <div class="formula" style="font-size:19px;gap:6px">
+        <span>EVM<sub>RMS</sub> =</span>
+        <span>√</span>
+        <span class="frac sm"><span class="n">Σ |S<sub>k</sub> − R<sub>k</sub>|²</span><span class="d">Σ |R<sub>k</sub>|²</span></span>
+        <span>× 100</span>
+      </div>
+      <p class="s"><b>S<sub>k</sub></b>: سمبل اندازه‌گیری‌شده · <b>R<sub>k</sub></b>: سمبل مرجع ایده‌آل</p>
+    </div>
+    <div class="col">
+      <table class="t compact">
+        <thead><tr><th>EVM</th><th>تفسیر</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1%</td><td>بسیار خوب</td></tr>
+          <tr><td class="n">3%</td><td>خوب</td></tr>
+          <tr><td class="n">8%</td><td>خطای قابل توجه</td></tr>
+          <tr><td class="n">15%</td><td>نامناسب برای مدولاسیون مرتبه بالا</td></tr>
+        </tbody>
+      </table>
+      <div class="note warn">برخلاف SINR، در EVM <b>مقدار کمتر بهتر است</b>. این اعداد مثال آموزشی‌اند؛ حدود مجاز به مدولاسیون و استاندارد وابسته است.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 43 · CQI ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">PHY / MAC Metric</div>
+  <h2>CQI — شاخص کیفیت کانال</h2>
+  <p>گوشی کیفیت کانال Downlink را ارزیابی می‌کند و به شبکه گزارش می‌دهد؛ شبکه بر پایه آن تصمیم می‌گیرد از چه <b>مدولاسیون و نرخ کدگذاری</b> استفاده کند.</p>
+  <div class="split">
+    <table class="t grow">
+      <thead><tr><th>CQI</th><th>برداشت کلی</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1 – 3</td><td>کیفیت بسیار ضعیف</td></tr>
+        <tr><td class="n">4 – 6</td><td>کیفیت ضعیف</td></tr>
+        <tr><td class="n">7 – 9</td><td>متوسط</td></tr>
+        <tr><td class="n">10 – 12</td><td>خوب</td></tr>
+        <tr><td class="n">13 – 15</td><td>بسیار خوب</td></tr>
+      </tbody>
+    </table>
+    <div class="col">
+      <div class="card"><div class="t">کانال خوب</div><p class="s">امکان استفاده از 64QAM یا 256QAM → بیت بیشتر در هر سمبل.</p></div>
+      <div class="card"><div class="t">کانال ضعیف</div><p class="s">استفاده از QPSK یا مدولاسیون مقاوم‌تر → نرخ کمتر اما ارتباط پایدار.</p></div>
+      <div class="note">CQI به‌تنهایی اندازه‌گیری مستقیم SINR نیست؛ یک شاخص گزارش‌شده از سمت گوشی است.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 44 · MCS ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">PHY / MAC Metric</div>
+  <h2>MCS — طرح مدولاسیون و کدگذاری</h2>
+  <p class="s">MCS مشخص می‌کند اطلاعات با چه مدولاسیونی و چه نرخ کدگذاری ارسال شوند؛ دو بخش اصلی دارد: <b>Modulation Order</b> و <b>Coding Rate</b>.</p>
+  <div class="split">
+    <table class="t grow">
+      <thead><tr><th>Modulation</th><th>بیت در هر سمبل</th></tr></thead>
+      <tbody>
+        <tr><td>BPSK</td><td class="n">1</td></tr>
+        <tr><td>QPSK</td><td class="n">2</td></tr>
+        <tr><td>16QAM</td><td class="n">4</td></tr>
+        <tr><td>64QAM</td><td class="n">6</td></tr>
+        <tr><td>256QAM</td><td class="n">8</td></tr>
+      </tbody>
+    </table>
+    <div class="col">
+      <div class="formula" style="font-size:24px"><span>CQI</span><span>→</span><span>MCS</span><span>→</span><span>Throughput</span></div>
+      <p class="s">هرچه نقاط صورت فلکی بیشتر باشد، بیت بیشتری در هر سمبل منتقل می‌شود؛ اما تشخیص صحیح به کیفیت بالاتری از کانال نیاز دارد.</p>
+      <div class="note">انتخاب MCS فقط به CQI وابسته نیست؛ زمان‌بندی، تخصیص منابع، تنظیمات لینک و محدودیت‌های UE هم اثر دارند.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 45 · HARQ ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">PHY / MAC Metric</div>
+  <h2>HARQ — درخواست تکرار خودکار ترکیبی</h2>
+  <div class="split">
+    <div class="col">
+      <p>فرستنده یک Transport Block می‌فرستد؛ اگر گیرنده به علت خطا نتواند آن را درست دریافت کند، درخواست ارسال مجدد می‌دهد. در HARQ، اطلاعات قبلی با اطلاعات جدید <b>ترکیب</b> می‌شود تا احتمال رمزگشایی موفق بالا برود.</p>
+      <div class="grid c2">
+        <div class="card"><div class="t" style="color:#6ee7b7">ACK</div><p class="s">دریافت موفق بلوک</p></div>
+        <div class="card"><div class="t" style="color:#fda4af">NACK</div><p class="s">دریافت ناموفق؛ درخواست تکرار</p></div>
+      </div>
+    </div>
+    <div class="col">
+      <table class="t compact">
+        <thead><tr><th>شاخص</th><th>مفهوم</th></tr></thead>
+        <tbody>
+          <tr><td>HARQ Retransmission Rate</td><td>نرخ ارسال مجدد</td></tr>
+          <tr><td>HARQ Round Trip Time</td><td>زمان رفت‌وبرگشت HARQ</td></tr>
+          <tr><td>First Transmission BLER</td><td>نرخ خطای انتقال اول</td></tr>
+          <tr><td>Residual BLER</td><td>خطای باقی‌مانده پس از تکرارها</td></tr>
+        </tbody>
+      </table>
+      <div class="note warn">افزایش ارسال مجدد، منابع رادیویی را مصرف می‌کند و Throughput مفید را کاهش می‌دهد.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 46 · SPECTRAL EFFICIENCY ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">کارایی</div>
+  <h2>Spectral Efficiency — بهره‌وری طیفی</h2>
+  <p>نشان می‌دهد شبکه از پهنای باند فرکانسی خود چقدر مؤثر استفاده می‌کند.</p>
+  <div class="split">
+    <div class="col">
+      <div class="formula" style="font-size:24px">
+        <span>SE =</span>
+        <span class="frac"><span class="n">Throughput</span><span class="d">Bandwidth</span></span>
+        <span>[ bps/Hz ]</span>
+      </div>
+      <div class="card"><div class="t">مثال</div><p class="s">سلولی با ۲۰ مگاهرتز پهنای باند که ۱۰۰ مگابیت بر ثانیه منتقل می‌کند:</p><div class="formula" style="font-size:20px;padding:10px">SE = 100 / 20 = 5 bps/Hz</div></div>
+    </div>
+    <div class="col">
+      <table class="t compact">
+        <thead><tr><th>حالت</th><th>Spectral Efficiency</th></tr></thead>
+        <tbody>
+          <tr><td>حالت A</td><td class="n">1.5 bps/Hz</td></tr>
+          <tr><td>حالت B</td><td class="n">3 bps/Hz</td></tr>
+          <tr><td>حالت C</td><td class="n">5 bps/Hz</td></tr>
+          <tr><td>حالت D</td><td class="n">7 bps/Hz</td></tr>
+        </tbody>
+      </table>
+      <div class="note">راهکارهای افزایش SE: <b>MIMO</b> · <b>Beamforming</b> · مدولاسیون مرتبه بالا · مدیریت تداخل · زمان‌بندی پیشرفته</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 47 · PAPR ============ -->
+<section class="frame" data-ch="6">
+  <div class="k">طراحی فرستنده</div>
+  <h2>PAPR — نسبت توان پیک به متوسط</h2>
+  <div class="split">
+    <div class="col">
+      <p>نشان می‌دهد توان لحظه‌ای پیک سیگنال چقدر بیشتر از توان متوسط آن است.</p>
+      <div class="formula" style="font-size:24px">
+        <span>PAPR =</span>
+        <span class="frac"><span class="n">P<sub>peak</sub></span><span class="d">P<sub>average</sub></span></span>
+        <span>·</span>
+        <span>PAPR<sub>dB</sub> = 10 log<sub>10</sub>(PAPR)</span>
+      </div>
+      <div class="note">در OFDM، جمع تعداد زیادی زیرحامل می‌تواند پیک‌های لحظه‌ای بزرگ بسازد.</div>
+    </div>
+    <div class="col">
+      <div class="card"><div class="t">پیامدهای PAPR بالا</div>
+        <ul class="b" style="gap:9px;margin-top:6px">
+          <li>اشباع تقویت‌کننده توان (PA)</li>
+          <li>افزایش اعوجاج سیگنال</li>
+          <li>کاهش راندمان انرژی</li>
+          <li>افزایش EVM و انتشار طیفی ناخواسته</li>
+        </ul>
+      </div>
+      <div class="note ok">PAPR برای تحلیل <b>طراحی فرستنده</b>، به‌ویژه در LTE و 5G، اهمیت دارد.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 48 · OTHER PHY ============ -->
+<section class="frame" data-ch="6" data-w="1650">
+  <div class="k">مرور سریع</div>
+  <h2>سایر شاخص‌های مهم لایه فیزیکی</h2>
+  <table class="t compact grow">
+    <thead><tr><th>شاخص</th><th>نام کامل</th><th>کاربرد</th></tr></thead>
+    <tbody>
+      <tr><td><b>SNR</b></td><td>Signal-to-Noise Ratio</td><td>نسبت سیگنال به نویز</td></tr>
+      <tr><td><b>RSSI</b></td><td>Received Signal Strength Indicator</td><td>توان کل دریافتی</td></tr>
+      <tr><td><b>PMI</b></td><td>Precoding Matrix Indicator</td><td>پیشنهاد ماتریس پیش‌کدگذاری</td></tr>
+      <tr><td><b>RI</b></td><td>Rank Indicator</td><td>تعداد لایه‌های فضایی پیشنهادی</td></tr>
+      <tr><td><b>CSI</b></td><td>Channel State Information</td><td>اطلاعات وضعیت کانال</td></tr>
+      <tr><td><b>CFO</b></td><td>Carrier Frequency Offset</td><td>اختلاف فرکانس حامل</td></tr>
+      <tr><td><b>ICI</b></td><td>Inter-Carrier Interference</td><td>تداخل بین زیرحامل‌ها</td></tr>
+      <tr><td><b>Phase Noise</b></td><td>Phase Noise</td><td>نوسان فاز حامل</td></tr>
+    </tbody>
+  </table>
+  <div class="note">این شاخص‌ها کمتر در گزارش اپراتوری دیده می‌شوند، اما در تحلیل عمیق PHY و شبیه‌سازی ضروری‌اند.</div>
+</section>
+
+<!-- ============ 49 · QOE METRICS ============ -->
+<section class="frame" data-ch="6" data-w="1650">
+  <div class="k">تجربه کاربر</div>
+  <h2>شاخص‌های تکمیلی شبکه و تجربه</h2>
+  <table class="t compact grow">
+    <thead><tr><th>شاخص</th><th>مفهوم</th><th>واحد</th></tr></thead>
+    <tbody>
+      <tr><td><b>Goodput</b></td><td>داده مفید تحویل‌شده به کاربر</td><td>Mbps</td></tr>
+      <tr><td><b>Jitter</b></td><td>تغییرات تأخیر بسته‌ها</td><td>ms</td></tr>
+      <tr><td><b>PDR</b></td><td>نسبت بسته‌های تحویل‌شده به ارسالی</td><td>%</td></tr>
+      <tr><td><b>RTT</b></td><td>زمان رفت‌وبرگشت بسته</td><td>ms</td></tr>
+      <tr><td><b>User / Cell Throughput</b></td><td>سرعت هر کاربر / مجموع سرعت سلول</td><td>Mbps</td></tr>
+      <tr><td><b>PRB Utilization</b></td><td>میزان استفاده از منابع رادیویی</td><td>%</td></tr>
+      <tr><td><b>Outage Probability</b></td><td>احتمال خروج لینک از شرایط سرویس‌دهی</td><td>%</td></tr>
+    </tbody>
+  </table>
+  <div class="note"><b>Throughput</b> شامل کل داده منتقل‌شده در لایه اندازه‌گیری است؛ <b>Goodput</b> فقط داده مفید تحویل‌شده را می‌شمارد و سربار پروتکل را حذف می‌کند.</div>
+</section>
+
+<!-- ============ 50 · LAYER MAP ============ -->
+<section class="frame" data-ch="6" data-w="1500">
+  <div class="k">نقشه ارتباط شاخص‌ها</div>
+  <h2>هر شاخص، در کدام لایه زندگی می‌کند؟</h2>
+  <div class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:11px">
+    <div class="card" style="border-color:rgba(56,189,248,.4)"><div class="t">RF / Channel Layer</div><p class="s mono">RSRP · RSSI · RSRQ · SINR · SNR · Multipath</p></div>
+    <div style="text-align:center;color:var(--muted);font-size:20px">↓</div>
+    <div class="card" style="border-color:rgba(163,230,53,.4)"><div class="t">Physical Layer (PHY)</div><p class="s mono">BER · BLER · EVM · ISI · ICI · PAPR · CQI</p></div>
+    <div style="text-align:center;color:var(--muted);font-size:20px">↓</div>
+    <div class="card" style="border-color:rgba(251,191,36,.4)"><div class="t">MAC / Link Layer</div><p class="s mono">MCS · HARQ · PRB Utilization · Scheduling</p></div>
+    <div style="text-align:center;color:var(--muted);font-size:20px">↓</div>
+    <div class="card" style="border-color:rgba(167,139,250,.4)"><div class="t">Network / Service Layer</div><p class="s mono">Throughput · Goodput · Latency · Jitter · Packet Loss</p></div>
+    <div style="text-align:center;color:var(--muted);font-size:20px">↓</div>
+    <div class="card" style="border-color:rgba(251,113,133,.45)"><div class="t">User Experience (QoE)</div><p class="s mono">Video Quality · Voice Quality · Application Experience</p></div>
+  </div>
+  <div class="note">این نمودار یک <b>مدل آموزشی</b> از ارتباط شاخص‌هاست، نه ترتیب دقیق پردازش پروتکل در شبکه.</div>
+</section>
+
+<!-- ============ 51 · SIONNA ============ -->
+<section class="frame" data-ch="6" data-w="1700">
+  <div class="k">پیوند با شبیه‌سازی</div>
+  <h2>این مفاهیم در NVIDIA Sionna کجا دیده می‌شوند؟</h2>
+  <table class="t compact grow">
+    <thead><tr><th>شاخص</th><th>Sionna RT</th><th>Sionna PHY</th><th>Sionna SYS</th></tr></thead>
+    <tbody>
+      <tr><td><b>RSRP</b></td><td>از توان دریافتی</td><td>قابل تحلیل</td><td>در مدل سیستم</td></tr>
+      <tr><td><b>SINR</b></td><td>از انتشار و تداخل</td><td>قابل محاسبه</td><td>قابل ارزیابی</td></tr>
+      <tr><td><b>ISI</b></td><td>اثر چندمسیری</td><td>قابل شبیه‌سازی</td><td>بسته به مدل</td></tr>
+      <tr><td><b>BER</b></td><td>—</td><td>بله</td><td>قابل مدل‌سازی</td></tr>
+      <tr><td><b>BLER</b></td><td>—</td><td>بله</td><td>قابل مدل‌سازی</td></tr>
+      <tr><td><b>EVM</b></td><td>—</td><td>بله</td><td>بسته به مدل</td></tr>
+      <tr><td><b>CQI / MCS</b></td><td>—</td><td>قابل محاسبه</td><td>قابل مدل‌سازی</td></tr>
+      <tr><td><b>Throughput / SE</b></td><td>—</td><td>لینک‌محور</td><td>بله</td></tr>
+    </tbody>
+  </table>
+  <div class="note">این جدول نمای کلی قابلیت‌هاست و به نسخه، ماژول و سناریوی پیاده‌سازی وابسته است.</div>
+</section>
+
+<!-- ============ 52 · CHAPTER 7 ============ -->
+<section class="frame ch" data-ch="7" data-w="2100">
+  <div class="chnum">۰۷</div>
+  <div>
+    <div class="k">فصل هفت</div>
+    <h2>KPI و هوش مصنوعی در RAN</h2>
+    <p class="sub">شبکه دائماً درباره وضعیت خود داده تولید می‌کند؛ این داده‌ها ورودی مدل‌های هوش مصنوعی هستند.</p>
+    <div class="list">
+      <span class="chip">Prediction</span><span class="chip">Anomaly Detection</span>
+      <span class="chip">Optimization</span><span class="chip">Automation</span><span class="chip">O-RAN RIC</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 53 · DATA TO DECISION ============ -->
+<section class="frame" data-ch="7" data-w="1750">
+  <div class="k">معماری مفهومی</div>
+  <h2>از اندازه‌گیری تا تصمیم</h2>
+  <div class="split wide-l">
+    <figure class="fig">
+      <img src="./images/%7B09AAF86C-D8BF-441F-9591-6DA884FD74DA%7D.png" alt="از اندازه‌گیری شبکه تا بهبود عملکرد با هوش مصنوعی">
+      <figcaption>زنجیره: Measurement → AI/ML → اقدام → بهبود عملکرد</figcaption>
+    </figure>
+    <div class="col">
+      <ul class="b">
+        <li>ورودی مدل: <b>RSRP، SINR، CQI، PRB، BLER، Throughput، HO</b></li>
+        <li>مدل: پیش‌بینی، طبقه‌بندی، تشخیص ناهنجاری، بهینه‌سازی</li>
+        <li>خروجی: تغییر پارامتر، هشدار یا اقدام خودکار</li>
+      </ul>
+      <div class="note">در معماری O-RAN، داده‌های عملکردی و رادیویی می‌توانند برای تحلیل و تصمیم‌گیری در <b>RIC</b> و <b>xApp/rApp</b> استفاده شوند.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 54 · AI EXAMPLES ============ -->
+<section class="frame" data-ch="7" data-w="1700">
+  <div class="k">چهار مثال واقعی</div>
+  <h2>هوش مصنوعی روی KPIها چه می‌کند؟</h2>
+  <table class="t grow">
+    <thead><tr><th>مسئله شبکه</th><th>داده ورودی AI</th><th>خروجی یا اقدام</th></tr></thead>
+    <tbody>
+      <tr><td>افت کیفیت سیگنال</td><td>RSRP، SINR</td><td>پیش‌بینی ناحیه ضعیف</td></tr>
+      <tr><td>ازدحام سلول</td><td>PRB، تعداد کاربران، Throughput</td><td>Load Balancing</td></tr>
+      <tr><td>قطع ارتباط</td><td>Drop Rate، BLER</td><td>تشخیص علت اختلال</td></tr>
+      <tr><td>شکست Handover</td><td>HO Failure، RSRP، Mobility</td><td>بهینه‌سازی پارامترهای HO</td></tr>
+    </tbody>
+  </table>
+  <div class="note warn">تصمیم‌های حساس باید با سیاست‌های اپراتور، محدودیت‌های کنترلی و اعتبارسنجی همراه باشند؛ اتوماسیون بدون حفاظت، ریسک است.</div>
+</section>
+
+<!-- ============ 55 · AI IN PHY ============ -->
+<section class="frame" data-ch="7" data-w="1850">
+  <div class="k">نمونه پژوهشی</div>
+  <h2>هوش مصنوعی، حتی در لایه فیزیکی</h2>
+  <figure class="fig">
+    <img src="./images/Pasted%20image%2020261103112107.png" alt="مقایسه Throughput و BLER یک اتواینکودر با 5G NR">
+    <figcaption>مقایسه یک Autoencoder با 5G NR: Throughput، SNR، MCS و BLER در یک نمای واحد</figcaption>
+  </figure>
+  <div class="note">همان شاخص‌هایی که اینجا تعریف کردیم — <b>BLER، MCS، SNR، Throughput</b> — سنجه داوری یک ایده هوش مصنوعی در PHY هستند.</div>
+</section>
+
+<!-- ============ 56 · TROUBLESHOOTING TABLE ============ -->
+<section class="frame" data-ch="8" data-w="1700">
+  <div class="k">کارگاه</div>
+  <h2>عیب‌یابی یک سایت: مشکل چیست؟</h2>
+  <table class="t grow">
+    <thead><tr><th>KPI</th><th>مقدار سایت</th><th>وضعیت فرضی</th></tr></thead>
+    <tbody>
+      <tr><td>RSRP متوسط</td><td class="n">-82 dBm</td><td><span class="pill p-good">خوب</span></td></tr>
+      <tr><td>SINR متوسط</td><td class="n">2 dB</td><td><span class="pill p-bad">ضعیف</span></td></tr>
+      <tr><td>RRC Success Rate</td><td class="n">99%</td><td><span class="pill p-good">خوب</span></td></tr>
+      <tr><td>Drop Rate</td><td class="n">2.5%</td><td><span class="pill p-bad">نامطلوب</span></td></tr>
+      <tr><td>DL Throughput</td><td class="n">12 Mbps</td><td><span class="pill p-bad">پایین</span></td></tr>
+      <tr><td>PRB Utilization</td><td class="n">92%</td><td><span class="pill p-mid">بالا</span></td></tr>
+      <tr><td>HO Success Rate</td><td class="n">98%</td><td><span class="pill p-good">خوب</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">سؤال از دانشجویان: <b>با این گزارش، اول کدام فرضیه را بررسی می‌کنید و چرا؟</b></div>
+</section>
+
+<!-- ============ 57 · ANALYSIS ============ -->
+<section class="frame" data-ch="8">
+  <div class="k">تحلیل</div>
+  <h2>از عدد به نتیجه‌گیری</h2>
+  <div class="split">
+    <div class="col">
+      <div class="card"><div class="t">۱. پوشش مشکل نیست</div><p class="s">RSRP برابر ‎-82 dBm مناسب است؛ پس الزاماً با ضعف پوشش روبه‌رو نیستیم.</p></div>
+      <div class="card"><div class="t">۲. کیفیت مشکل است</div><p class="s">SINR = 2 dB؛ احتمال تداخل رادیویی بالا است.</p></div>
+      <div class="card"><div class="t">۳. منابع اشباع شده‌اند</div><p class="s">PRB Utilization = ۹۲٪؛ احتمال ازدحام وجود دارد.</p></div>
+      <div class="card"><div class="t">۴. Handover مظنون نیست</div><p class="s">HO SR = ۹۸٪؛ پس در این نمونه جابه‌جایی مشکل اصلی نیست.</p></div>
+    </div>
+    <div class="col">
+      <div class="note warn">نتیجه: افت تجربه کاربر (Throughput پایین و Drop Rate بالا) با <b>تداخل + ازدحام</b> سازگارتر است تا با ضعف پوشش.</div>
+      <div class="card"><div class="t">راهکارهای پیشنهادی</div>
+        <ul class="b" style="gap:8px;margin-top:6px">
+          <li>بررسی هم‌پوشانی سلول‌ها و تداخل فرکانسی</li>
+          <li>بررسی تخصیص منابع رادیویی</li>
+          <li>بررسی بار ترافیکی و توزیع کاربران</li>
+          <li>بررسی توان و پارامترهای آنتن</li>
+          <li>پایش KPIها پس از اعمال تغییرات</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 58 · 3D CITY ============ -->
+<section class="frame" data-ch="8" data-w="1850">
+  <div class="k">سناریوی زنده</div>
+  <h2>شهر سه‌بعدی: پوشش، تداخل و پیش‌بینی</h2>
+  <div class="split">
+    <figure class="fig">
+      <img src="./images/Pasted%20image%2020261103110720.png" alt="شبیه‌سازی پرتو در شهر سه‌بعدی">
+      <figcaption>ردیابی پرتو در شهر سه‌بعدی: مسیرها، بازتاب‌ها و پراکندگی</figcaption>
+    </figure>
+    <figure class="fig">
+      <img src="./images/Pasted%20image%2020261103110755.png" alt="نقشه پوشش 5G روی شهر سه‌بعدی">
+      <figcaption>پوشش RSRP روی مدل سه‌بعدی شهر با سایت‌های 5G</figcaption>
+    </figure>
+  </div>
+  <div class="note">در این سناریو محل سایت‌ها، Heatmap پوشش، نواحی SINR پایین و نقاط با Throughput کم مشخص می‌شوند؛ سپس یک مدل AI نواحی مشکل‌دار را پیش‌بینی می‌کند.</div>
+</section>
+
+<!-- ============ 59 · SUMMARY ============ -->
+<section class="frame" data-ch="8" data-w="1700">
+  <div class="k">جمع‌بندی</div>
+  <h2>نقشه کامل شاخص‌ها</h2>
+  <table class="t compact grow">
+    <thead><tr><th>دسته</th><th>شاخص‌های مهم</th></tr></thead>
+    <tbody>
+      <tr><td>پوشش</td><td class="mono" style="direction:rtl">RSRP · RSSI</td></tr>
+      <tr><td>کیفیت رادیویی</td><td>RSRQ · SINR · SNR</td></tr>
+      <tr><td>خطای انتقال</td><td>BER · BLER · EVM</td></tr>
+      <tr><td>اعوجاج کانال</td><td>ISI · ICI · CFO</td></tr>
+      <tr><td>کیفیت مدولاسیون</td><td>CQI · MCS</td></tr>
+      <tr><td>عملکرد لینک</td><td>HARQ · RI · PMI</td></tr>
+      <tr><td>بهره‌وری</td><td>Throughput · Goodput · Spectral Efficiency</td></tr>
+      <tr><td>منابع</td><td>PRB Utilization · PAPR</td></tr>
+      <tr><td>تجربه کاربر</td><td>Latency · Jitter · Packet Loss</td></tr>
+      <tr><td>عملکرد شبکه</td><td>Accessibility · Retainability · Mobility · Availability</td></tr>
+    </tbody>
+  </table>
+  <div class="note">ISI، ICI، CFO، Phase Noise و PAPR الزاماً KPI اپراتوری نیستند؛ برخی پدیده یا پارامتر فنی برای تحلیل عملکرد PHY هستند.</div>
+</section>
+
+<!-- ============ 60 · CLASS PLAN ============ -->
+<section class="frame" data-ch="8" data-w="1550">
+  <div class="k">برنامه کلاس</div>
+  <h2>۴۵ دقیقه، نُه گام</h2>
+  <table class="t grow">
+    <thead><tr><th>موضوع</th><th>زمان</th></tr></thead>
+    <tbody>
+      <tr><td>مفهوم KPI و اهمیت آن</td><td class="n">۳ دقیقه</td></tr>
+      <tr><td>دسته‌بندی KPIها</td><td class="n">۳ دقیقه</td></tr>
+      <tr><td>RSRP، RSRQ و SINR</td><td class="n">۸ دقیقه</td></tr>
+      <tr><td>Accessibility و Retainability</td><td class="n">۵ دقیقه</td></tr>
+      <tr><td>Mobility و Handover</td><td class="n">۵ دقیقه</td></tr>
+      <tr><td>Throughput، Latency و BLER</td><td class="n">۵ دقیقه</td></tr>
+      <tr><td>نمودارهای عملکرد شبکه</td><td class="n">۵ دقیقه</td></tr>
+      <tr><td>ارتباط KPI و AI-RAN</td><td class="n">۵ دقیقه</td></tr>
+      <tr><td>تمرین عیب‌یابی سایت</td><td class="n">۶ دقیقه</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 61 · SOURCES / END ============ -->
+<section class="frame hero" data-ch="8" data-w="1800" data-h="980" data-r="1.4">
+  <div class="k">منابع و ادامه مسیر</div>
+  <h2>برای مطالعه بیشتر</h2>
+  <ul class="b" style="font-size:19px">
+    <li>Rohde &amp; Schwarz — <b>LTE Mobile Network Optimization</b> (دسته‌بندی KPI و تجربه کاربر)</li>
+    <li>3GPP TS 28.554 — <b>5G Performance Measurements</b> (تعاریف رسمی Retainability و Mobility)</li>
+    <li>MobileInsight — <b>KPI Tutorial</b> (نمونه‌های تحلیل داده شبکه)</li>
+    <li>Anritsu — <b>5G Coverage Mapping</b> و TamoGraph (نمایش Heatmap پوشش)</li>
+    <li>NIST — <b>LTE Physical Layer Performance Analysis</b> (BLER و SE نسبت به SNR)</li>
+  </ul>
+  <div class="hintline" style="margin-top:auto">
+    <span class="chip">پایان — پرسش و پاسخ</span>
+    <span class="chip">دوره هوش مصنوعی در RAN</span>
+    <span>با کلید <kbd>O</kbd> نمای کلی را ببینید</span>
+  </div>
+</section>
+
+</div><!-- /stage -->
+
+<div id="vig"></div>
+
+<div id="ui">
+  <div class="g">
+    <button class="b rnd" id="prev" aria-label="قبلی">›</button>
+    <button class="b rnd" id="next" aria-label="بعدی">‹</button>
+    <span class="counter"><b id="cur">۱</b> / <span id="tot">۶۰</span></span>
+  </div>
+  <div class="g">
+    <button class="b" id="ov">نمای کلی</button>
+    <button class="b" id="hlp">راهنما</button>
+    <button class="b" id="fs">تمام‌صفحه</button>
+  </div>
+</div>
+<div id="bar"><i></i></div>
+
+<div id="helpbox" class="hide">
+  <div class="pane">
+    <h3>راهنمای حرکت در ارائه</h3>
+    <div class="row"><span>بعدی</span><span><kbd>←</kbd> یا <kbd>Space</kbd> یا چرخ ماوس به پایین</span></div>
+    <div class="row"><span>قبلی</span><span><kbd>→</kbd> یا چرخ ماوس به بالا</span></div>
+    <div class="row"><span>پرش به فریم</span><span>روی هر کارت کلیک کنید</span></div>
+    <div class="row"><span>نمای کلی (زوم بیرون)</span><span><kbd>O</kbd> یا <kbd>Esc</kbd></span></div>
+    <div class="row"><span>اول / آخر</span><span><kbd>Home</kbd> / <kbd>End</kbd></span></div>
+    <div class="row"><span>تمام‌صفحه</span><span><kbd>F</kbd></span></div>
+    <div class="row"><span>پخش خودکار (۱۴ ثانیه)</span><span><kbd>A</kbd></span></div>
+    <div class="row"><span>بستن این پنجره</span><span><kbd>H</kbd> یا <kbd>Esc</kbd></span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var CH = {0:'#22d3ee',1:'#38bdf8',2:'#34d399',3:'#fbbf24',4:'#a78bfa',5:'#fb7185',6:'#a3e635',7:'#e879f9',8:'#7dd3fc'};
+  var COLS = [0,2000,4000,6000,8000,10000,12000,14000];
+  var ROWS = [0,1480,2960,4440,5920,7400,8880,10360];
+
+  function fa(n){ return String(n).replace(/[0-9]/g, function(d){ return '۰۱۲۳۴۵۶۷۸۹'[+d]; }); }
+
+  var stage = $('#stage');
+  var els = Array.prototype.slice.call(document.querySelectorAll('.frame'));
+  var items = els.map(function(el, i){
+    var row = Math.floor(i/8), col = i%8, c = (row%2) ? (7-col) : col;
+    var w = +(el.dataset.w || 1600), h = +(el.dataset.h || 900);
+    var x = (el.dataset.x !== undefined) ? +el.dataset.x : COLS[c] + (((i*53)%160) - 80);
+    var y = (el.dataset.y !== undefined) ? +el.dataset.y : ROWS[row] + (((i*37)%160) - 80);
+    var r = (el.dataset.r !== undefined) ? +el.dataset.r : (((i*29)%80)/10 - 4);
+    el.style.width = w+'px'; el.style.height = h+'px';
+    el.style.left = (x - w/2)+'px'; el.style.top = (y - h/2)+'px';
+    el.style.transform = 'rotate('+r+'deg)';
+    var acc = CH[+(el.dataset.ch || 0)] || CH[0];
+    el.style.setProperty('--accent', acc);
+    el.style.setProperty('--accent-soft', acc + '1f');
+    el.dataset.idx = i;
+    return {el:el, x:x, y:y, w:w, h:h, r:r};
+  });
+
+  /* ---- spatial path between frames ---- */
+  var minX = Math.min.apply(null, items.map(function(f){ return f.x - f.w/2; })) - 260;
+  var maxX = Math.max.apply(null, items.map(function(f){ return f.x + f.w/2; })) + 260;
+  var minY = Math.min.apply(null, items.map(function(f){ return f.y - f.h/2; })) - 260;
+  var maxY = Math.max.apply(null, items.map(function(f){ return f.y + f.h/2; })) + 260;
+  try{
+    var NS = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(NS,'svg');
+    svg.setAttribute('width', maxX-minX); svg.setAttribute('height', maxY-minY);
+    svg.setAttribute('viewBox', '0 0 '+(maxX-minX)+' '+(maxY-minY));
+    svg.style.cssText = 'position:absolute;left:'+minX+'px;top:'+minY+'px;z-index:-1;pointer-events:none';
+    var g = document.createElementNS(NS,'polyline');
+    g.setAttribute('points', items.map(function(f){ return (f.x-minX)+','+(f.y-minY); }).join(' '));
+    g.setAttribute('fill','none');
+    g.setAttribute('stroke','rgba(34,211,238,.16)');
+    g.setAttribute('stroke-width','3');
+    g.setAttribute('stroke-dasharray','10 22');
+    g.setAttribute('stroke-linejoin','round');
+    svg.appendChild(g);
+    stage.appendChild(svg);
+  }catch(e){}
+
+  var cur = -1, overview = false, timer = null;
+  var bar = $('#bar i');
+
+  function view(f, dur, pad){
+    pad = pad || 0.94;
+    var W = innerWidth, H = innerHeight;
+    var s = Math.min(W*pad/f.w, H*pad/f.h);
+    stage.style.transition = dur ? ('transform '+dur+'ms cubic-bezier(.22,.61,.3,1)') : 'none';
+    stage.style.transform = 'translate('+(W/2)+'px,'+(H/2)+'px) scale('+s+') rotate('+(-f.r)+'deg) translate('+(-f.x)+'px,'+(-f.y)+'px)';
+  }
+
+  function go(i, dur){
+    i = Math.max(0, Math.min(items.length-1, i));
+    cur = i; overview = false;
+    document.body.classList.remove('ov');
+    view(items[i], (dur === undefined ? 950 : dur));
+    for (var k=0;k<items.length;k++) items[k].el.classList.toggle('active', k===i);
+    $('#cur').textContent = fa(i+1);
+    bar.style.width = (i/(items.length-1)*100) + '%';
+    try{ history.replaceState(null,'','#f'+(i+1)); }catch(e){}
+    document.title = fa(i+1) + ' / ' + fa(items.length) + ' — KPIهای شبکه سلولی';
+  }
+
+  function toggleOverview(){
+    if(!overview){
+      overview = true;
+      document.body.classList.add('ov');
+      view({x:(minX+maxX)/2, y:(minY+maxY)/2, w:(maxX-minX), h:(maxY-minY), r:0}, 1250, 0.96);
+    } else go(cur, 1000);
+  }
+
+  function autoplay(){
+    if(timer){ clearInterval(timer); timer = null; return; }
+    timer = setInterval(function(){
+      if(cur >= items.length-1){ clearInterval(timer); timer = null; return; }
+      go(cur+1);
+    }, 14000);
+  }
+
+  addEventListener('keydown', function(e){
+    if(e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = e.key;
+    if(k === 'ArrowLeft' || k === 'ArrowDown' || k === 'PageDown' || k === ' '){ e.preventDefault(); go(cur+1); }
+    else if(k === 'ArrowRight' || k === 'ArrowUp' || k === 'PageUp'){ e.preventDefault(); go(cur-1); }
+    else if(k === 'Home'){ e.preventDefault(); go(0); }
+    else if(k === 'End'){ e.preventDefault(); go(items.length-1); }
+    else if(k === 'o' || k === 'O' || k === 'Escape'){ e.preventDefault(); toggleOverview(); }
+    else if(k === 'h' || k === 'H'){ e.preventDefault(); $('#helpbox').classList.toggle('hide'); }
+    else if(k === 'f' || k === 'F'){
+      if(document.fullscreenElement) document.exitFullscreen();
+      else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    }
+    else if(k === 'a' || k === 'A'){ autoplay(); }
+  });
+
+  var lastWheel = 0;
+  addEventListener('wheel', function(e){
+    var d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    if(Math.abs(d) < 6) return;
+    var now = Date.now();
+    if(now - lastWheel < 620) return;
+    lastWheel = now;
+    go(cur + (d > 0 ? 1 : -1));
+  }, {passive:true});
+
+  var down = null;
+  addEventListener('pointerdown', function(e){ down = {x:e.clientX, y:e.clientY}; });
+  addEventListener('pointerup', function(e){
+    if(!down) return;
+    var dx = e.clientX - down.x, dy = e.clientY - down.y;
+    down = null;
+    if(Math.abs(dy) > 90 && Math.abs(dy) > Math.abs(dx)){ go(cur + (dy < 0 ? 1 : -1)); return; }
+    if(Math.abs(dx) > 70){ go(cur + (dx < 0 ? 1 : -1)); return; }
+    var fr = e.target.closest ? e.target.closest('.frame') : null;
+    if(fr && +fr.dataset.idx !== cur) go(+fr.dataset.idx);
+  });
+
+  addEventListener('resize', function(){ if(!overview) view(items[Math.max(cur,0)], 0); });
+
+  $('#next').addEventListener('click', function(){ go(cur+1); });
+  $('#prev').addEventListener('click', function(){ go(cur-1); });
+  $('#ov').addEventListener('click', toggleOverview);
+  $('#hlp').addEventListener('click', function(){ $('#helpbox').classList.toggle('hide'); });
+  $('#fs').addEventListener('click', function(){
+    if(document.fullscreenElement) document.exitFullscreen();
+    else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+  });
+  $('#helpbox').addEventListener('click', function(e){ if(e.target.id === 'helpbox') this.classList.add('hide'); });
+
+  $('#tot').textContent = fa(items.length);
+  $('#tot2').textContent = fa(items.length);
+
+  var start = 0, m = /#f(\d+)/.exec(location.hash);
+  if(m) start = Math.max(0, Math.min(items.length-1, parseInt(m[1],10)-1));
+  go(start, 0);
+  if(location.hash === '#ov'){
+    overview = true;
+    document.body.classList.add('ov');
+    view({x:(minX+maxX)/2, y:(minY+maxY)/2, w:(maxX-minX), h:(maxY-minY), r:0}, 0, 0.96);
+  }
+})();
+</script>
+</body>
+</html>

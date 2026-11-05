@@ -1,0 +1,83 @@
+/* ==========================================================================
+   AI-RAN Interactive Presentation — animations.css
+   Camera transitions live in JS (transform on #world); everything here is
+   decorative motion that must degrade gracefully with prefers-reduced-motion.
+   ========================================================================== */
+
+/* dashed "flight path" links between topics */
+@keyframes dashFlow {
+  to { stroke-dashoffset: -600; }
+}
+
+/* gentle breathing glow used by the active scene marker */
+@keyframes breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+
+/* scene content entrance — applied only to the active scene */
+@keyframes sceneRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes accentSweep {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 0.85; }
+}
+
+/* HUD entrance */
+@keyframes hudIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* decorative pulse on the section badge */
+@keyframes pulseDot {
+  0%   { box-shadow: 0 0 0 0 rgba(79, 140, 255, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(79, 140, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 140, 255, 0); }
+}
+
+/* ------------------------------------------------------------------ apply --- */
+.hud-top { animation: hudIn 0.5s var(--ease) both; }
+.hud-nav { animation: hudIn 0.6s 0.05s var(--ease) both; }
+.hud-zoom { animation: hudIn 0.6s 0.1s var(--ease) both; }
+.hud-map { animation: hudIn 0.6s 0.15s var(--ease) both; }
+
+.scene.is-active .scene-head { animation: sceneRise 0.5s 0.12s var(--ease) both; }
+.scene.is-active .scene-body { animation: sceneRise 0.55s 0.18s var(--ease) both; }
+.scene.is-active .scene-foot { animation: sceneRise 0.5s 0.26s var(--ease) both; }
+
+.scene.is-active::before { animation: accentSweep 0.5s var(--ease) both; }
+
+.brand-mark { animation: pulseDot 3.4s ease-in-out infinite; }
+
+.toast.is-open { animation: toastIn 0.25s var(--ease) both; }
+
+/* live "you are here" dot on the minimap */
+.map-scene.is-current { animation: breathe 2.4s ease-in-out infinite; transform-origin: center; }
+
+/* ----------------------------------------------------------------- a11y --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .world-links path.link { animation: none; stroke-dasharray: none; }
+  .brand-mark, .map-scene.is-current { animation: none; }
+}
+
+/* low-power fallback: if the browser reports no hover (touch), trim effects */
+@media (hover: none) {
+  .scene::after { opacity: 0.5; }
+}
